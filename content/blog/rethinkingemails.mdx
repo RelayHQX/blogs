@@ -1,0 +1,135 @@
+---
+title: "We're Building Email Differently. This Is Relay Mail."
+description: "Why we're rethinking email, building Relay-Rover, and bringing the simplicity of instant messaging to the inbox."
+date: "2026-11-10"
+tags: [Product, Engineering, Relay-Rover, Email]
+authors: [relay]
+readingTime: "5 min read"
+image: "/blog/gradient_4096x2304.png"
+---
+
+Email hasn't become painful just because we receive too many messages. It has become painful because the way we interact with email hasn't evolved in thirty years.
+
+Open an email. Read it. Hunt for the crucial two sentences. Scroll past a wall of signatures, legal disclaimers, and quoted threads. Find the reply button. Wait for a spinner. Repeat fifty times a day.
+
+We believe it can be fundamentally simpler.
+
+> **"We don't want you to manage your inbox. We want you to get things done and move on."**
+
+We're building **Relay Mail** to bring the effortless simplicity of instant messaging into email — not by squeezing every message into an awkward chat bubble, but by making the entire experience feel natural, immediate, and distraction-free.
+
+---
+
+## The Core Difference at a Glance
+
+| Aspect | Traditional Email Clients | Relay Mail |
+| :--- | :--- | :--- |
+| **Interface** | Cluttered sidebars, endless metadata, heavy toolbars | Clean, conversational, distraction-free |
+| **Action Speed** | Loading spinners & network roundtrips on every click | Instant optimistic UI powered by TanStack Query |
+| **Key Info** | Manually hunt through signatures for codes & IDs | Extracted & surfaced immediately |
+| **Intelligence** | Slow, expensive cloud AI API calls | 100% on-device Relay-Rover engine |
+| **Categories** | Generic 4 tabs (Promotions, Social, Updates, Spam) | Purpose-driven contextual grouping |
+| **Privacy** | Cloud-scraped and remote-parsed content | Zero-cloud-inference local processing |
+
+---
+
+## 1. Email Should Feel Like a Conversation
+
+We love how modern messaging apps work: you open a thread, instantly understand what's happening, reply, and move on with your day.
+
+Why can't email feel that effortless?
+
+With Relay Mail:
+
+- <MessageSquare className="size-4 inline text-emerald-500 mr-2" /> **Conversations come first** — not endless headers, timestamps, and server metadata.
+- <CheckCircle2 className="size-4 inline text-emerald-500 mr-2" /> **Replies feel continuous** — write your response right where you're reading.
+- <EyeOff className="size-4 inline text-neutral-400 dark:text-neutral-500 mr-2" /> **Signal over noise** — signatures, legal disclaimers, and redundant quotes are collapsed automatically.
+- <Sliders className="size-4 inline text-indigo-500 mr-2" /> **Contextual actions** — controls appear when you need them, not cluttering the canvas all the time.
+
+We aren't trying to cram more buttons onto the screen. We're designing an interface that gets out of your way.
+
+---
+
+## 2. Speed Isn't Just About Loading Screens
+
+A truly fast email application doesn't force you to wait after every action.
+
+We designed Relay's client architecture around **TanStack Query** to deliver genuine sub-millisecond responsiveness:
+
+- <Zap className="size-4.5 inline text-amber-500 mr-2" /> **Instant Optimistic Updates:** Mark an email as read or archive a thread, and the interface responds immediately without waiting for server acknowledgments.
+- <RefreshCw className="size-4.5 inline text-blue-500 mr-2" /> **Silent Background Reconciliation:** State synchronizes seamlessly in the background and updates only what actually changed.
+- <Inbox className="size-4.5 inline text-purple-500 mr-2" /> **Smart Prefetching:** Frequently accessed threads and upcoming conversations are pre-cached in memory so transitions are instant.
+
+The philosophy is straightforward:
+
+> **"The app should feel instant, even when the internet isn't."**
+
+---
+
+## 3. Meet Relay-Rover: On-Device Email Intelligence
+
+Most email clients act as passive renderers — they receive raw HTML and leave the mental burden of parsing to you.
+
+We built **Relay-Rover**, our client-side email extraction and classification engine that runs entirely on your device. Rover reads incoming message content, recognizes structural patterns, and surfaces the key data directly:
+
+### What Rover Extracts and Surfaces Instantly:
+
+- <KeyRound className="size-4.5 inline text-amber-500 mr-2" /> **Security & Auth:** OTPs, 2FA verification codes, and magic sign-in links with a single-tap **Copy** button.
+- <Package className="size-4.5 inline text-blue-500 mr-2" /> **Shipping & Logistics:** Courier tracking codes with live delivery status.
+- <CreditCard className="size-4.5 inline text-emerald-500 mr-2" /> **Finance & Commerce:** Transaction amounts, merchant receipts, and invoice references.
+- <Plane className="size-4.5 inline text-sky-500 mr-2" /> **Travel & Itineraries:** Flight numbers, boarding times, gate updates, and hotel reservations.
+- <Calendar className="size-4.5 inline text-purple-500 mr-2" /> **Schedules & Deadlines:** Event times, RSVPs, calendar invites, and due dates.
+
+Instead of opening a 3-page email, scrolling through branding banners, and highlighting a six-digit code, Relay extracts the code and puts it right at your fingertips.
+
+---
+
+## 4. Purpose-Driven Categories (Beyond Generic Tabs)
+
+An email isn't just "Promotions" or "Updates."
+
+A bank transfer alert, an OTP confirmation, a flight itinerary, a coworker's query, and an online receipt all serve entirely distinct purposes.
+
+Rover categorizes messages based on their true function using sender heuristics, structural markers, and content signatures.
+
+### Why We Avoided Cloud AI APIs for Classification
+
+Many modern apps simply forward every email to a remote LLM API. We intentionally rejected that approach:
+
+- <Lock className="size-4.5 inline text-emerald-500 mr-2" /> **100% On-Device Privacy:** Your emails never leave your device to be parsed or classified.
+- <Cpu className="size-4.5 inline text-indigo-500 mr-2" /> **Compiled Local Rules:** Pre-compiled regex patterns, keyword dictionaries, and structural matchers run natively.
+- <Gauge className="size-4.5 inline text-amber-500 mr-2" /> **Zero Network Latency:** No roundtrips, no cloud API bills, and zero waiting for remote models.
+
+> **"Build the intelligence once. Execute it across millions of emails locally in zero milliseconds."**
+
+---
+
+## 5. Not Every Email Deserves the Same UI
+
+A two-sentence note from a friend and an elaborate marketing newsletter have nothing in common. Forcing them into the same template makes no sense.
+
+Relay adapts its presentation dynamically based on what Rover detects:
+
+- <MessageSquare className="size-4.5 inline text-emerald-500 mr-2" /> **Conversational Emails:** A clean, distraction-free reading canvas.
+- <FileText className="size-4.5 inline text-blue-500 mr-2" /> **HTML Newsletters:** A structured, full-bleed document view preserving rich formatting.
+- <Layers className="size-4.5 inline text-purple-500 mr-2" /> **Transactional Emails:** Clear summary cards with extracted details on top, with raw email preserved underneath.
+
+The original email is always just a toggle away — nothing is ever lost or altered.
+
+---
+
+## 6. What We're Actually Building
+
+We aren't interested in making another incremental clone of interfaces designed in 2004.
+
+We're building the email client we wish existed:
+
+- <Check className="size-4 inline text-emerald-500 mr-2" /> Where an OTP is already there.
+- <Check className="size-4 inline text-emerald-500 mr-2" /> Where a receipt is immediately understood.
+- <Check className="size-4 inline text-emerald-500 mr-2" /> Where a conversation feels like a conversation.
+- <Check className="size-4 inline text-emerald-500 mr-2" /> Where every action happens with zero lag.
+- <Check className="size-4 inline text-emerald-500 mr-2" /> Where the interface never gets between you and what you need to do.
+
+<Sparkles className="size-4.5 inline text-amber-500 mr-2" /> **Email has been around for decades. Using it shouldn't feel decades old.**
+
+Welcome to Relay Mail. Less managing. More doing.

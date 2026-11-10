@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isMarkdownPreferred, rewritePath } from 'fumadocs-core/negotiation';
-import { docsContentRoute, docsRoute } from '@/lib/shared';
+import { blogContentRoute, blogRoute } from '@/lib/shared';
 
-const { rewrite: rewriteDocs } = rewritePath(
-  `${docsRoute}{/*path}`,
-  `${docsContentRoute}{/*path}/content.md`,
+const { rewrite: rewriteBlog } = rewritePath(
+  `${blogRoute}{/*path}`,
+  `${blogContentRoute}{/*path}/content.md`,
 );
 const { rewrite: rewriteSuffix } = rewritePath(
-  `${docsRoute}{/*path}.md`,
-  `${docsContentRoute}{/*path}/content.md`,
+  `${blogRoute}{/*path}.md`,
+  `${blogContentRoute}{/*path}/content.md`,
 );
 
 export default function proxy(request: NextRequest) {
@@ -18,7 +18,7 @@ export default function proxy(request: NextRequest) {
   }
 
   if (isMarkdownPreferred(request)) {
-    const result = rewriteDocs(request.nextUrl.pathname);
+    const result = rewriteBlog(request.nextUrl.pathname);
 
     if (result) {
       return NextResponse.rewrite(new URL(result, request.nextUrl), {

@@ -1,18 +1,23 @@
 import { createGetUrl } from 'fumadocs-core/source';
 
-export const appName = 'My App';
-export const docsRoute = '/docs';
-export const docsImageRoute = '/og/docs';
-export const docsContentRoute = '/llms.mdx/docs';
+export const appName = 'Relay Blog';
+export const blogRoute = '/blog';
+export const blogImageRoute = '/og/blog';
+export const blogContentRoute = '/llms.mdx/blog';
 
-// fill this with your actual GitHub info, for example:
+// Backward compatibility aliases
+export const docsRoute = blogRoute;
+export const docsImageRoute = blogImageRoute;
+export const docsContentRoute = blogContentRoute;
+
+// GitHub repository info
 export const gitConfig = {
-  user: 'fuma-nama',
-  repo: 'fumadocs',
+  user: 'RelayHQX',
+  repo: 'blogs',
   branch: 'main',
 };
 
-const getContentUrl = createGetUrl(docsContentRoute);
+const getContentUrl = createGetUrl(blogContentRoute);
 
 export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {
   const segments = [...page.slugs, 'content.md'];
@@ -20,7 +25,7 @@ export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {
   return { segments, url: getContentUrl(segments, page.locale) };
 }
 
-const getImageUrl = createGetUrl(docsImageRoute);
+const getImageUrl = createGetUrl(blogImageRoute);
 
 export function getPageImageUrl(page: { slugs: string[]; locale?: string }) {
   const segments = [...page.slugs, 'image.png'];
