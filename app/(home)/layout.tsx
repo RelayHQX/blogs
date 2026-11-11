@@ -15,19 +15,19 @@ export default function HomeLayout({ children }: { children: ReactNode }) {
       {/* Mobile Header (visible only on mobile/tablet < lg) */}
       <MobileHeader tags={tags} />
 
-      {/* Main layout container */}
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 px-4 sm:px-6 lg:px-8">
-        {/* Left Sidebar (visible on desktop lg:flex) */}
-        <aside className="sticky top-0 hidden h-screen w-56 xl:w-60 shrink-0 flex-col justify-between py-8 lg:flex border-r border-neutral-100 dark:border-neutral-900 pr-6">
+      {/* Main layout container with generous responsive padding matching blog.x.com */}
+      <div className="mx-auto flex w-full max-w-[1520px] flex-1 px-4 sm:px-6 lg:px-10">
+        {/* Left Sidebar (visible on desktop lg:flex - spacious with no harsh divider lines) */}
+        <aside className="sticky top-0 hidden h-screen w-60 xl:w-64 shrink-0 flex-col justify-between py-10 lg:flex pr-8">
           <LeftSidebar tags={tags} />
         </aside>
 
-        {/* Content area: Center column (+ optional Right panel on post pages) */}
-        <main className="flex-1 min-w-0 lg:pl-10 xl:pl-12 py-6 sm:py-8 flex flex-col">
+        {/* Content area: Center column with abundant breathing room */}
+        <main className="flex-1 min-w-0 lg:pl-16 xl:pl-24 py-10 sm:py-12 lg:py-16 flex flex-col">
           <div className="flex-1 w-full">{children}</div>
 
           {/* Subtle footer */}
-          <footer className="mt-16 border-t border-neutral-100 dark:border-neutral-900 py-6 text-xs text-neutral-400 dark:text-neutral-500">
+          <footer className="mt-20 border-t border-neutral-100 dark:border-neutral-900 py-8 text-xs text-neutral-400 dark:text-neutral-500">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <p>© 2026 Relay. All rights reserved.</p>
               <div className="flex items-center gap-4">

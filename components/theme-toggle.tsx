@@ -14,11 +14,7 @@ export function ThemeToggle() {
     () => false,
   );
 
-  if (!mounted) {
-    return <div className="size-8" />;
-  }
-
-  const isDark = resolvedTheme === 'dark';
+  const isDark = mounted && resolvedTheme === 'dark';
 
   return (
     <button
@@ -31,7 +27,7 @@ export function ThemeToggle() {
       {isDark ? (
         <SunIcon className="size-4 text-amber-400 transition-transform hover:rotate-45" />
       ) : (
-        <MoonIcon className="size-4 text-neutral-700 transition-transform hover:-rotate-12" />
+        <MoonIcon className="size-4 text-neutral-700 dark:text-neutral-300 transition-transform hover:-rotate-12" />
       )}
     </button>
   );

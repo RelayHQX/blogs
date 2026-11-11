@@ -1,4 +1,5 @@
 export * from './card';
+export * from './featured-card';
 export * from './header';
 export * from './authors';
 export * from './tags';

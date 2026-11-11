@@ -3,70 +3,29 @@
 import Link from 'fumadocs-core/link';
 import { usePathname } from 'next/navigation';
 import { RelayLogo } from '@/components/ui/relay-logo';
-import {
-  Home,
-  Layers,
-  Compass,
-  Mail,
-  Scroll,
-  Cpu,
-  Building2,
-  Calendar,
-  Shield,
-  Zap,
-  Tag,
-  Tags,
-  Rss,
-  Newspaper,
-  type LucideIcon,
-} from 'lucide-react';
+import { Home, Tags, Rss, Newspaper } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SearchButton } from '@/components/search-button';
 import { cn } from '@/lib/cn';
 import type { BlogTag } from '@/lib/blog';
+import { getTagIcon } from '@/lib/tag-icon';
 
-export function getTagIcon(slugOrName: string): LucideIcon {
-  const key = slugOrName.toLowerCase();
-  switch (key) {
-    case 'home':
-      return Home;
-    case 'product':
-      return Layers;
-    case 'philosophy':
-      return Compass;
-    case 'email':
-      return Mail;
-    case 'manifesto':
-      return Scroll;
-    case 'engineering':
-      return Cpu;
-    case 'company':
-    case 'business':
-      return Building2;
-    case 'events':
-      return Calendar;
-    case 'privacy':
-    case 'security':
-      return Shield;
-    case 'performance':
-      return Zap;
-    case 'all-tags':
-    case 'tags':
-      return Tags;
-    case 'rss':
-      return Rss;
-    default:
-      return Tag;
-  }
-}
+export { getTagIcon };
 
 interface LeftSidebarProps {
   tags?: BlogTag[];
   onItemClick?: () => void;
   className?: string;
+  /** Hide brand + search/theme chrome (used in the mobile drawer). */
+  compact?: boolean;
 }
 
-export function LeftSidebar({ tags = [], onItemClick, className }: LeftSidebarProps) {
+export function LeftSidebar({
+  tags = [],
+  onItemClick,
+  className,
+  compact = false,
+}: LeftSidebarProps) {
   const pathname = usePathname();
 
   // Primary static tags to ensure standard categories are always represented
@@ -89,19 +48,20 @@ export function LeftSidebar({ tags = [], onItemClick, className }: LeftSidebarPr
   return (
     <div className={cn('flex h-full flex-col justify-between', className)}>
       <div className="flex flex-col gap-6">
-        {/* Brand Header: Relay Icon | Blog */}
-        <Link
-          href="/blog"
-          onClick={onItemClick}
-          className="group flex items-center gap-2.5 px-3 py-2 text-neutral-900 dark:text-neutral-100 transition-opacity hover:opacity-90"
-        >
-          <RelayLogo className="size-8 text-neutral-900 dark:text-white transition-transform duration-200 group-hover:scale-105" />
-          <span className="text-neutral-300 dark:text-neutral-700 font-light select-none text-base">
-            |
-          </span>
-          <Newspaper className="size-4.5 text-neutral-800 dark:text-neutral-200" />
-          <span className="font-semibold text-base tracking-tight">Blog</span>
-        </Link>
+        {!compact && (
+          <Link
+            href="/blog"
+            onClick={onItemClick}
+            className="group flex items-center gap-2.5 px-3 py-2 text-neutral-900 dark:text-neutral-100 transition-opacity hover:opacity-90"
+          >
+            <RelayLogo className="w-auto h-[16.6px] text-neutral-900 dark:text-white transition-transform duration-200 group-hover:scale-105" />
+            <span className="text-neutral-300 dark:text-neutral-700 font-light select-none text-base">
+              |
+            </span>
+            <Newspaper className="size-4.5 text-neutral-800 dark:text-neutral-200" />
+            <span className="font-semibold text-base tracking-tight">Blog</span>
+          </Link>
+        )}
 
         {/* Navigation items: Home + Tags with proper icons */}
         <nav className="flex flex-col gap-1">
@@ -144,9 +104,6 @@ export function LeftSidebar({ tags = [], onItemClick, className }: LeftSidebarPr
             );
           })}
 
-          {/* Divider */}
-          <div className="my-2 border-t border-neutral-100 dark:border-neutral-900/80" />
-
           {/* All Tags Directory */}
           <Link
             href="/blog/tags"
@@ -174,11 +131,12 @@ export function LeftSidebar({ tags = [], onItemClick, className }: LeftSidebarPr
         </nav>
       </div>
 
-      {/* Bottom Controls: Search & Theme Toggle (NO PROFILE BADGE per user prompt) */}
-      <div className="pt-4 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between gap-2 px-1">
-        <SearchButton />
-        <ThemeToggle />
-      </div>
+      {!compact && (
+        <div className="pt-6 flex items-center justify-between gap-2 px-1">
+          <SearchButton />
+          <ThemeToggle />
+        </div>
+      )}
     </div>
   );
 }

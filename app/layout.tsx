@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
-      <body className="flex min-h-screen flex-col">
+      <body suppressHydrationWarning className="flex min-h-screen flex-col">
         <RootProvider
           search={{ enabled: true }}
           theme={{

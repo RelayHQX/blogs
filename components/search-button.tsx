@@ -2,8 +2,15 @@
 
 import { useSearchContext } from 'fumadocs-ui/contexts/search';
 import { SearchIcon } from 'lucide-react';
+import { cn } from '@/lib/cn';
 
-export function SearchButton() {
+export function SearchButton({
+  className,
+  iconOnly = false,
+}: {
+  className?: string;
+  iconOnly?: boolean;
+}) {
   const { enabled, setOpenSearch } = useSearchContext();
 
   if (!enabled) return null;
@@ -13,13 +20,23 @@ export function SearchButton() {
       type="button"
       onClick={() => setOpenSearch(true)}
       aria-label="Search posts"
-      className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200/80 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-800/60 px-3 py-1.5 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
+      className={cn(
+        'inline-flex items-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer',
+        iconOnly
+          ? 'size-8 justify-center rounded-full border border-neutral-200/80 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-800/70'
+          : 'gap-1.5 rounded-full border border-neutral-200/80 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-800/60 px-3 py-1.5 text-xs',
+        className,
+      )}
     >
       <SearchIcon className="size-3.5" />
-      <span className="hidden sm:inline">Search</span>
-      <kbd className="hidden sm:inline rounded bg-neutral-200/70 dark:bg-neutral-700/70 px-1 py-0.5 text-[10px] font-mono text-neutral-600 dark:text-neutral-300">
-        ⌘K
-      </kbd>
+      {!iconOnly && (
+        <>
+          <span className="hidden sm:inline">Search</span>
+          <kbd className="hidden sm:inline rounded bg-neutral-200/70 dark:bg-neutral-700/70 px-1 py-0.5 text-[10px] font-mono text-neutral-600 dark:text-neutral-300">
+            ⌘K
+          </kbd>
+        </>
+      )}
     </button>
   );
 }

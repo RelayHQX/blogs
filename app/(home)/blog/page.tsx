@@ -4,6 +4,7 @@ import {
   BlogCards,
   BlogTagFilter,
   BlogEmpty,
+  BlogFeaturedCard,
 } from '@/components/blog';
 import { RelayLogo } from '@/components/ui/relay-logo';
 import type { Metadata } from 'next';
@@ -38,18 +39,36 @@ export default function BlogIndexPage() {
   const posts = getPosts(blogSource.getPages(), blogAuthors);
   const tags = getTags(posts);
 
+  // The primary announcement post (Relay Manifesto)
+  const featuredPost =
+    posts.find((p) => p.url.includes('rethinkingemails')) ?? posts[0];
+  const feedPosts = posts.filter((p) => p.url !== featuredPost?.url);
+
   return (
-    <div className="mx-auto w-full max-w-[1200px] pb-8">
-      {/* Blog Hero Section matching X blog style */}
-      <div className="mb-10 flex flex-col gap-4 border-b border-neutral-100 dark:border-neutral-900 pb-8">
+    <div className="mx-auto w-full max-w-[1360px] pb-24">
+      {/* Top Header Row matching X blog: Insights & News from Relay + Search */}
+      <div className="mb-12 flex items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold tracking-tight text-neutral-950 dark:text-white">
+          Insights & News from Relay
+        </h1>
+      </div>
+
+      {/* Hero Announcement Box: Clean, simple box card with NO gradients */}
+      {featuredPost && (
+        <div className="mb-20">
+          <BlogFeaturedCard post={featuredPost} />
+        </div>
+      )}
+
+      {/* Secondary Section Header matching X blog: Stories worth your time */}
+      <div className="mb-12 flex flex-col gap-5 border-b border-neutral-100 dark:border-neutral-900/80 pb-8">
         <div>
-          <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-bold tracking-tight text-neutral-950 dark:text-white leading-[1.12]">
+          <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-bold tracking-tight text-neutral-950 dark:text-white leading-[1.15]">
             Stories worth your time
-          </h1>
-          <p className="mt-2.5 flex items-center gap-2 text-base sm:text-lg text-neutral-500 dark:text-neutral-400 font-normal">
+          </h2>
+          <p className="mt-3 flex items-center gap-2 text-sm sm:text-base text-neutral-500 dark:text-neutral-400 font-normal">
             <span>picks from the</span>
-            <RelayLogo className="size-4.5 sm:size-5 text-neutral-800 dark:text-neutral-200" />
-            <span>team</span>
+            <RelayLogo text=" elayHQ" className="h-[18px] sm:h-[16px] w-auto text-neutral-900 dark:text-neutral-400" />
           </p>
         </div>
 
@@ -57,8 +76,10 @@ export default function BlogIndexPage() {
         <BlogTagFilter tags={tags} max={8} />
       </div>
 
-      {/* Post Grid */}
-      {posts.length > 0 ? (
+      {/* Small box cards grid matching Claude / Anthropic reference (media_1794399664397_0abb09d9.jpg) */}
+      {feedPosts.length > 0 ? (
+        <BlogCards posts={feedPosts} />
+      ) : posts.length > 0 ? (
         <BlogCards posts={posts} />
       ) : (
         <BlogEmpty />

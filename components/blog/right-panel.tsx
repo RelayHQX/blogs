@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { ArrowUpRight, Check, ListFilter } from 'lucide-react';
 import type { BlogAuthor, BlogTag } from '@/lib/blog';
 import type { TOCItemType } from 'fumadocs-core/toc';
-import { useTOCItems } from '@/components/toc';
+import { useTOCItems, TOCScrollArea } from '@/components/toc';
+import { TOCItems, TOCItem } from '@/components/toc/default';
 import { cn } from '@/lib/cn';
 
 const fullDateFormat = new Intl.DateTimeFormat('en-US', {
@@ -122,25 +123,20 @@ export function BlogRightPanel({
         </div>
       )}
 
-      {/* Table of Contents (if available) */}
+      {/* Table of Contents with Fumadocs Rail Line Indicator */}
       {items.length > 0 && (
-        <div className="flex flex-col gap-2.5 pt-2 border-t border-neutral-100 dark:border-neutral-900">
+        <div className="flex flex-col gap-3 pt-4 border-t border-neutral-100 dark:border-neutral-900">
           <span className="flex items-center gap-1.5 text-xs font-normal text-neutral-400 dark:text-neutral-500">
             <ListFilter className="size-3.5" />
             <span>On This Page</span>
           </span>
-          <nav className="flex flex-col gap-1.5 max-h-[40vh] overflow-y-auto pr-1">
-            {items.map((item) => (
-              <a
-                key={item.url}
-                href={item.url}
-                className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition-colors line-clamp-1 py-0.5"
-                style={{ paddingLeft: `${Math.max(0, (item.depth - 2) * 12)}px` }}
-              >
-                {item.title}
-              </a>
-            ))}
-          </nav>
+          <TOCScrollArea className="max-h-[50vh] overflow-y-auto pr-1">
+            <TOCItems thumbBox={true}>
+              {items.map((item) => (
+                <TOCItem key={item.url} item={item} />
+              ))}
+            </TOCItems>
+          </TOCScrollArea>
         </div>
       )}
 

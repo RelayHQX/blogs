@@ -34,9 +34,9 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
 
   return (
     <BlogPage toc={page.data.toc}>
-      <div className="flex flex-col lg:flex-row items-start justify-between gap-10 xl:gap-16">
+      <div className="flex flex-col lg:flex-row items-start justify-between gap-10 xl:gap-16 pt-2">
         {/* Main Article Column */}
-        <article className="flex-1 min-w-0 max-w-[760px] w-full pb-16">
+        <article className="flex-1 min-w-0 max-w-[780px] w-full pb-20">
           {/* Breadcrumb matching Image 1: < Blog / Tag */}
           <div className="flex items-center gap-3 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mb-6">
             <Link
@@ -112,14 +112,14 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
             <MDX components={getMDXComponents()} />
           </BlogBody>
 
-          {/* Post Navigation */}
-          <div className="mt-14 pt-8 border-t border-neutral-100 dark:border-neutral-900">
+          {/* Post Navigation (Single clean divider line) */}
+          <div className="mt-20">
             <BlogPostNav newer={current.newer} older={current.older} />
           </div>
         </article>
 
         {/* Right Panel matching Image 1 & 2 ("the right panel stay there") */}
-        <aside className="hidden lg:block w-56 xl:w-64 shrink-0 sticky top-8 h-fit self-start pt-2">
+        <aside className="hidden lg:block w-56 xl:w-64 shrink-0 sticky top-20 h-fit self-start pt-2">
           <BlogRightPanel
             author={primaryAuthor}
             date={current.post.date}
