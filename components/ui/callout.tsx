@@ -104,10 +104,6 @@ export interface CalloutProps extends Omit<ComponentProps<'div'>, 'title'> {
   icon?: ReactNode;
 }
 
-/**
- * Pixel-perfect Fumadocs Callout matching user reference image:
- * Features left vertical colored rail line, icon, subtle dark card, and rounded borders.
- */
 export function Callout({
   type = 'info',
   title,
@@ -129,18 +125,15 @@ export function Callout({
       )}
       {...props}
     >
-      {/* Left colored vertical accent line */}
       <div
         className={cn('w-0.5 self-stretch rounded-full shrink-0', config.accentBar)}
         aria-hidden="true"
       />
 
-      {/* Leading icon */}
       <div className={cn('mt-0.5 shrink-0', config.iconColor)}>
         {customIcon || <IconComponent className="size-4.5" />}
       </div>
 
-      {/* Content text */}
       <div className="flex-1 min-w-0 text-neutral-800 dark:text-neutral-300 leading-relaxed font-normal">
         {title && (
           <div className="font-semibold text-neutral-950 dark:text-white mb-1">

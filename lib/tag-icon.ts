@@ -1,3 +1,5 @@
+import type { ComponentType } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { RelayLogo } from '@/components/ui/relay-logo';
 import {
   Home,
@@ -8,7 +10,6 @@ import {
   Tag,
   Tags,
   Rss,
-  type LucideIcon,
   GraphStar,
   SquareAsterisk,
   BoxesLinked,
@@ -16,41 +17,28 @@ import {
   Calendars,
 } from 'lucide-react';
 
-export type TagIcon = LucideIcon | typeof RelayLogo;
+export type TagIcon = LucideIcon | typeof RelayLogo | ComponentType<{ className?: string }>;
+
+const TAG_ICON_ENTRIES: [string[], TagIcon][] = [
+  [['home'], Home],
+  [['product'], Layers],
+  [['philosophy'], GraphStar],
+  [['email'], Mail],
+  [['manifesto'], SquareAsterisk],
+  [['engineering'], Cpu],
+  [['company', 'business'], RelayLogo],
+  [['events'], Calendars],
+  [['privacy', 'security'], ShieldCheck],
+  [['performance'], Zap],
+  [['all-tags', 'tags'], Tags],
+  [['rss'], Rss],
+  [['architecture'], BoxesLinked],
+];
+
+const TAG_ICON_MAP = new Map<string, TagIcon>(
+  TAG_ICON_ENTRIES.flatMap(([keys, icon]) => keys.map((key) => [key, icon]))
+);
 
 export function getTagIcon(slugOrName: string): TagIcon {
-  const key = slugOrName.toLowerCase();
-  switch (key) {
-    case 'home':
-      return Home;
-    case 'product':
-      return Layers;
-    case 'philosophy':
-      return GraphStar;
-    case 'email':
-      return Mail;
-    case 'manifesto':
-      return SquareAsterisk;
-    case 'engineering':
-      return Cpu;
-    case 'company':
-    case 'business':
-      return RelayLogo;
-    case 'events':
-      return Calendars;
-    case 'privacy':
-    case 'security':
-      return ShieldCheck;
-    case 'performance':
-      return Zap;
-    case 'all-tags':
-    case 'tags':
-      return Tags;
-    case 'rss':
-      return Rss;
-    case 'architecture':
-      return BoxesLinked;
-    default:
-      return Tag;
-  }
+  return TAG_ICON_MAP.get(slugOrName.toLowerCase()) ?? Tag;
 }

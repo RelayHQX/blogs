@@ -20,15 +20,10 @@ function estimateTextWidth(text: string, fontSize = 720): number {
 }
 
 export interface RelayLogoProps extends ComponentProps<'svg'> {
-  /** Optional text to draw immediately after the logo within the SVG */
   text?: string;
-  /** Gap between logo and text in SVG units (automatically -80 for lowercase like 'elayHQ') */
   textGap?: number;
-  /** Font size in SVG units (default: 720) */
   textFontSize?: number;
-  /** Font weight for the SVG text (default: 700) */
   textFontWeight?: number | string;
-  /** Custom fill color for path and text (defaults to 'currentColor') */
   fill?: string;
 }
 
@@ -45,14 +40,11 @@ export function RelayLogo({
   const logoWidth = 1000;
   const logoHeight = 971;
 
-  // If text starts with lowercase (e.g. 'elayHQ' to complete 'RelayHQ'),
-  // tuck it into the waist curve of 'R' (at X ~ 920) so there is zero awkward gap.
   const effectiveGap =
     textGap !== undefined ? textGap : text && /^[a-z]/.test(text) ? -80 : 20;
   const textX = logoWidth + effectiveGap;
 
   const textWidth = text ? estimateTextWidth(text, textFontSize) : 0;
-  // Extra safety margin (+280) so wide glyphs (like the tail of 'Q') are NEVER clipped by the viewBox
   const totalWidth = text ? Math.ceil(textX + textWidth + 280) : logoWidth;
 
   const resolvedFill = fill || 'currentColor';

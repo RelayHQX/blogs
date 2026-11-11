@@ -32,14 +32,6 @@ export function BlogCards({
   );
 }
 
-/**
- * Small box card matching X blog reference (media_1794396232779_e2d954f5.jpg):
- * - Top: Category on left, Date on right
- * - Clean cover photo inside card
- * - Headline Title
- * - Clean excerpt description
- * - No extra tag clutter
- */
 export function BlogCard({
   post,
   className,
@@ -59,7 +51,6 @@ export function BlogCard({
         className,
       )}
     >
-      {/* Top Header: Category on left, Date on right */}
       <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-3.5">
         <div className="flex items-center gap-1.5 font-medium">
           <TagIcon className="size-3.5 text-neutral-600 dark:text-neutral-400" />
@@ -75,7 +66,6 @@ export function BlogCard({
         )}
       </div>
 
-      {/* Cover Photo */}
       {post.image && (
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800/90 bg-neutral-100 dark:bg-neutral-900 mb-4">
           <Image
@@ -89,12 +79,10 @@ export function BlogCard({
         </div>
       )}
 
-      {/* Title */}
       <h2 className="text-base sm:text-lg font-bold tracking-tight text-neutral-950 dark:text-white leading-snug group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors line-clamp-2">
         {post.title}
       </h2>
 
-      {/* Description */}
       {post.description && (
         <p className="mt-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed font-normal">
           {post.description}
@@ -104,7 +92,6 @@ export function BlogCard({
   );
 }
 
-/** Empty state displayed when no posts match */
 export function BlogEmpty({
   title = 'No posts published yet',
   description = 'Check back soon for new updates!',

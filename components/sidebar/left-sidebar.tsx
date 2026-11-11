@@ -16,9 +16,10 @@ interface LeftSidebarProps {
   tags?: BlogTag[];
   onItemClick?: () => void;
   className?: string;
-  /** Hide brand + search/theme chrome (used in the mobile drawer). */
   compact?: boolean;
 }
+
+const DEFAULT_TAG_NAMES = ['Product', 'Philosophy', 'Email', 'Manifesto'];
 
 export function LeftSidebar({
   tags = [],
@@ -28,13 +29,10 @@ export function LeftSidebar({
 }: LeftSidebarProps) {
   const pathname = usePathname();
 
-  // Primary static tags to ensure standard categories are always represented
-  const defaultTags = ['Product', 'Philosophy', 'Email', 'Manifesto'];
   const presentTagNames = new Set(tags.map((t) => t.name.toLowerCase()));
-
-  const allNavTags: { name: string; slug: string; url: string }[] = [
+  const allNavTags = [
     ...tags.map((t) => ({ name: t.name, slug: t.slug, url: t.url })),
-    ...defaultTags
+    ...DEFAULT_TAG_NAMES
       .filter((dt) => !presentTagNames.has(dt.toLowerCase()))
       .map((dt) => ({
         name: dt,
@@ -63,9 +61,7 @@ export function LeftSidebar({
           </Link>
         )}
 
-        {/* Navigation items: Home + Tags with proper icons */}
         <nav className="flex flex-col gap-1">
-          {/* Home Link */}
           <Link
             href="/blog"
             onClick={onItemClick}
@@ -80,7 +76,6 @@ export function LeftSidebar({
             <span>Home</span>
           </Link>
 
-          {/* Dynamic Categories / Tags */}
           {allNavTags.map((tag) => {
             const Icon = getTagIcon(tag.slug);
             const isActive =
@@ -104,7 +99,6 @@ export function LeftSidebar({
             );
           })}
 
-          {/* All Tags Directory */}
           <Link
             href="/blog/tags"
             onClick={onItemClick}
@@ -119,7 +113,6 @@ export function LeftSidebar({
             <span>All Tags</span>
           </Link>
 
-          {/* RSS Feed Link */}
           <Link
             href="/rss.xml"
             onClick={onItemClick}

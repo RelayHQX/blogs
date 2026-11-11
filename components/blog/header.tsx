@@ -110,7 +110,7 @@ export function BlogCoverImage({
   return (
     <div
       className={cn(
-        'relative mt-6 w-full overflow-hidden border border-neutral-100 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800/50 shadow-xs',
+        'relative mt-6 w-full overflow-hidden border border-neutral-100 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800/50 shadow-xs rounded-t-2xl',
         className,
       )}
     >
