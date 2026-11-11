@@ -59,6 +59,13 @@ export function getRSS(baseUrl = 'https://blogs.relaymail.online'): string {
   const feedLink = `${cleanBaseUrl}/rss.xml`;
   const iconUrl = `${cleanBaseUrl}/favicon.png`;
 
+  let channelCoverImage: string | undefined;
+  if (latestPost?.image) {
+    channelCoverImage = latestPost.image.startsWith('http')
+      ? latestPost.image
+      : `${cleanBaseUrl}${latestPost.image.startsWith('/') ? '' : '/'}${latestPost.image}`;
+  }
+
   const itemsXml = posts
     .map((post) => {
       const postUrl = `${cleanBaseUrl}${post.url}`;
@@ -101,7 +108,7 @@ ${mediaContentTag ? mediaContentTag + '\n' : ''}${categoriesXml}
     .join('\n');
 
   return `<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:media="http://search.yahoo.com/mrss/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:media="http://search.yahoo.com/mrss/" xmlns:webfeeds="http://webfeeds.org/rss/1.0">
   <channel>
     <title>${escapeXml(appName)}</title>
     <link>${channelLink}</link>
@@ -116,6 +123,10 @@ ${mediaContentTag ? mediaContentTag + '\n' : ''}${categoriesXml}
       <width>144</width>
       <height>144</height>
     </image>
+    <webfeeds:icon>${iconUrl}</webfeeds:icon>
+    <webfeeds:logo>${iconUrl}</webfeeds:logo>
+    <webfeeds:accentColor>059669</webfeeds:accentColor>
+    ${channelCoverImage ? `<webfeeds:cover image="${escapeXml(channelCoverImage)}" />` : ''}
 ${itemsXml}
   </channel>
 </rss>`;
@@ -180,7 +191,7 @@ ${mediaContent ? '    ' + mediaContent + '\n' : ''}${categoriesXml}
     .join('\n');
 
   return `<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:webfeeds="http://webfeeds.org/rss/1.0">
   <title>${escapeXml(appName)}</title>
   <link href="${channelLink}"/>
   <link href="${feedLink}" rel="self"/>
@@ -188,6 +199,9 @@ ${mediaContent ? '    ' + mediaContent + '\n' : ''}${categoriesXml}
   <id>${channelLink}</id>
   <icon>${iconUrl}</icon>
   <logo>${iconUrl}</logo>
+  <webfeeds:icon>${iconUrl}</webfeeds:icon>
+  <webfeeds:logo>${iconUrl}</webfeeds:logo>
+  <webfeeds:accentColor>059669</webfeeds:accentColor>
   <subtitle>Insights, engineering deep dives, and product news from the Relay team.</subtitle>
 ${entriesXml}
 </feed>`;
