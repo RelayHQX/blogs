@@ -22,6 +22,8 @@ export interface BlogAuthor {
   url?: string;
   /** avatar URL */
   image?: string;
+  /** email for RSS and syndication */
+  email?: string;
 }
 
 export interface BlogTag {

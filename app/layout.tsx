@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://blogs.relaymail.net'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://blogs.relaymail.online'),
   title: {
     template: '%s | Relay Blog',
     default: 'Relay Blog',
@@ -21,6 +21,12 @@ export const metadata: Metadata = {
         {
           title: 'Relay Blog RSS Feed',
           url: '/rss.xml',
+        },
+      ],
+      'application/atom+xml': [
+        {
+          title: 'Relay Blog Atom Feed',
+          url: '/atom.xml',
         },
       ],
     },
