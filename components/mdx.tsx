@@ -46,6 +46,7 @@ import {
   Code,
   Globe,
   SlidersHorizontal,
+  CalendarDays,
 } from 'lucide-react';
 
 const ALERT_MAP: Record<string, { type: CalloutType; title: string }> = {
@@ -177,6 +178,7 @@ const icons = {
   Code,
   Globe,
   SlidersHorizontal,
+  CalendarDays
 };
 
 export function getMDXComponents(components?: MDXComponents) {
