@@ -1,6 +1,8 @@
 import { blogAuthors, blogSource } from '@/lib/source';
 import { getPosts } from '@/lib/blog';
 import { appName } from '@/lib/shared';
+import fs from 'node:fs';
+import path from 'node:path';
 
 function escapeXml(unsafe: string): string {
   return unsafe
@@ -28,6 +30,20 @@ function getMimeType(url: string): string {
     default:
       return 'image/jpeg';
   }
+}
+
+function getImageFileLength(imagePath?: string): number {
+  if (!imagePath) return 0;
+  try {
+    const clean = imagePath.replace(/^https?:\/\/[^/]+/, '').replace(/^\//, '');
+    const local = path.join(process.cwd(), 'public', clean);
+    if (fs.existsSync(local)) {
+      return fs.statSync(local).size;
+    }
+  } catch {
+    // fallback if on edge/serverless filesystem
+  }
+  return 1900215;
 }
 
 export function getBaseUrl(req?: Request): string {
@@ -80,29 +96,37 @@ export function getRSS(baseUrl = 'https://blogs.relaymail.online'): string {
           : `${cleanBaseUrl}${post.image.startsWith('/') ? '' : '/'}${post.image}`;
       }
       const mimeType = imageUrl ? getMimeType(imageUrl) : 'image/png';
+      const fileLength = getImageFileLength(post.image);
+
+      const enclosureTag = imageUrl && fileLength > 0
+        ? `      <enclosure url="${escapeXml(imageUrl)}" length="${fileLength}" type="${mimeType}"/>`
+        : '';
 
       const mediaContentTag = imageUrl
         ? `      <media:content url="${escapeXml(imageUrl)}" medium="image" type="${mimeType}" width="1448" height="1086"/>
       <media:thumbnail url="${escapeXml(imageUrl)}"/>`
         : '';
 
+      const cleanTitle = post.title.replace(/]]>/g, ']]]]><![CDATA[>');
+      const cleanDesc = description.replace(/]]>/g, ']]]]><![CDATA[>');
+
       const htmlContent = imageUrl
-        ? `<img src="${escapeXml(imageUrl)}" alt="${escapeXml(post.title)}" style="max-width:100%;height:auto;border-radius:8px;margin-bottom:12px;" /><p>${escapeXml(description)}</p>`
-        : `<p>${escapeXml(description)}</p>`;
+        ? `<p><img src="${escapeXml(imageUrl)}" alt="${escapeXml(post.title)}" style="max-width:100%;height:auto;border-radius:8px;margin-bottom:12px;" /></p><p>${cleanDesc}</p>`
+        : `<p>${cleanDesc}</p>`;
 
       const categoriesXml = post.tags
         .map((tag) => `      <category><![CDATA[${tag.name}]]></category>`)
         .join('\n');
 
       return `    <item>
-      <title><![CDATA[${post.title}]]></title>
+      <title><![CDATA[${cleanTitle}]]></title>
       <link>${postUrl}</link>
       <guid isPermaLink="true">${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>
       <description><![CDATA[${htmlContent}]]></description>
       <content:encoded><![CDATA[${htmlContent}]]></content:encoded>
       <dc:creator><![CDATA[${authorName}]]></dc:creator>
-${mediaContentTag ? mediaContentTag + '\n' : ''}${categoriesXml}
+${enclosureTag ? enclosureTag + '\n' : ''}${mediaContentTag ? mediaContentTag + '\n' : ''}${categoriesXml}
     </item>`;
     })
     .join('\n');
@@ -120,10 +144,8 @@ ${mediaContentTag ? mediaContentTag + '\n' : ''}${categoriesXml}
       <url>${iconUrl}</url>
       <title>${escapeXml(appName)}</title>
       <link>${channelLink}</link>
-      <width>144</width>
-      <height>144</height>
     </image>
-    <webfeeds:icon>${iconUrl}</webfeeds:icon>
+    <webfeeds:icon>${cleanBaseUrl}/favicon-96x96.png</webfeeds:icon>
     <webfeeds:logo>${iconUrl}</webfeeds:logo>
     <webfeeds:accentColor>059669</webfeeds:accentColor>
     ${channelCoverImage ? `<webfeeds:cover image="${escapeXml(channelCoverImage)}" />` : ''}
@@ -197,9 +219,9 @@ ${mediaContent ? '    ' + mediaContent + '\n' : ''}${categoriesXml}
   <link href="${feedLink}" rel="self"/>
   <updated>${updatedDate}</updated>
   <id>${channelLink}</id>
-  <icon>${iconUrl}</icon>
+  <icon>${cleanBaseUrl}/favicon-96x96.png</icon>
   <logo>${iconUrl}</logo>
-  <webfeeds:icon>${iconUrl}</webfeeds:icon>
+  <webfeeds:icon>${cleanBaseUrl}/favicon-96x96.png</webfeeds:icon>
   <webfeeds:logo>${iconUrl}</webfeeds:logo>
   <webfeeds:accentColor>059669</webfeeds:accentColor>
   <subtitle>Insights, engineering deep dives, and product news from the Relay team.</subtitle>

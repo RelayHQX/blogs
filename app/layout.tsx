@@ -17,11 +17,12 @@ export const metadata: Metadata = {
   description: 'The official blog of Relay — insights, engineering deep dives, and product news.',
   icons: {
     icon: [
-      { url: '/favicon.png', type: 'image/png' },
       { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.png', type: 'image/png', sizes: '192x192' },
     ],
     shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    apple: '/apple-icon.png',
   },
   openGraph: {
     title: 'Relay Blog',
