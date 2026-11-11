@@ -1,7 +1,15 @@
-import { Feed } from 'feed';
 import { blogAuthors, blogSource } from '@/lib/source';
 import { getPosts } from '@/lib/blog';
 import { appName } from '@/lib/shared';
+
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 function getMimeType(url: string): string {
   const ext = url.split('.').pop()?.toLowerCase();
@@ -37,126 +45,150 @@ export function getBaseUrl(req?: Request): string {
   return `${proto}://${host}`;
 }
 
-export function buildFeed(baseUrl = 'https://blogs.relaymail.online') {
-  // Ensure no trailing slash
+/**
+ * Standard RSS 2.0 Feed Generator matching Google Blog specifications
+ * Compatible with Brave News, Apple News, Feedly, and all major RSS aggregators.
+ */
+export function getRSS(baseUrl = 'https://blogs.relaymail.online'): string {
   const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
-
-  // Dynamically load all published blog posts (auto-sorted newest first)
   const posts = getPosts(blogSource.getPages(), blogAuthors);
   const latestPost = posts[0];
 
-  // Dynamically resolve channel image from latest post or fallback to brand logo
-  let channelImage = `${cleanBaseUrl}/favicon.png`;
-  if (latestPost?.image) {
-    channelImage = latestPost.image.startsWith('http')
-      ? latestPost.image
-      : `${cleanBaseUrl}${latestPost.image.startsWith('/') ? '' : '/'}${latestPost.image}`;
-  }
+  const buildDate = (latestPost?.date ?? new Date()).toUTCString();
+  const channelLink = `${cleanBaseUrl}/blog`;
+  const feedLink = `${cleanBaseUrl}/rss.xml`;
+  const iconUrl = `${cleanBaseUrl}/favicon.png`;
 
-  // Dynamic feed author from the latest post or fallback to default
-  const defaultAuthorName = latestPost?.authors[0]?.name || 'RelayHQ';
-  const defaultAuthorEmail = latestPost?.authors[0]?.email || 'sohamglxi@gmail.com';
-  const defaultAuthorLink = latestPost?.authors[0]?.url || `${cleanBaseUrl}/blog`;
+  const itemsXml = posts
+    .map((post) => {
+      const postUrl = `${cleanBaseUrl}${post.url}`;
+      const pubDate = (post.date ?? new Date()).toUTCString();
+      const authorName = post.authors.map((a) => a.name).join(', ') || 'RelayHQ';
+      const description = post.description ?? post.title;
 
-  const feed = new Feed({
-    title: appName,
-    description: 'Insights, engineering deep dives, and product news from the Relay team.',
-    id: `${cleanBaseUrl}/blog`,
-    link: `${cleanBaseUrl}/blog`,
-    language: 'en',
-    image: channelImage,
-    favicon: `${cleanBaseUrl}/favicon.png`,
-    copyright: `All rights reserved ${new Date().getFullYear()}, RelayHQ`,
-    updated: latestPost?.date ?? new Date(),
-    feedLinks: {
-      rss: `${cleanBaseUrl}/rss.xml`,
-      atom: `${cleanBaseUrl}/atom.xml`,
-    },
-    author: {
-      name: defaultAuthorName,
-      email: defaultAuthorEmail,
-      link: defaultAuthorLink,
-    },
-  });
+      let imageUrl: string | undefined;
+      if (post.image) {
+        imageUrl = post.image.startsWith('http')
+          ? post.image
+          : `${cleanBaseUrl}${post.image.startsWith('/') ? '' : '/'}${post.image}`;
+      }
+      const mimeType = imageUrl ? getMimeType(imageUrl) : 'image/png';
 
-  // Add Yahoo Media RSS namespace for Brave News and modern aggregators
-  feed.addExtension({
-    name: '_attributes',
-    objects: {
-      'xmlns:media': 'http://search.yahoo.com/mrss/',
-    },
-  });
+      const mediaContentTag = imageUrl
+        ? `      <media:content url="${escapeXml(imageUrl)}" medium="image" type="${mimeType}" width="1448" height="1086"/>
+      <media:thumbnail url="${escapeXml(imageUrl)}"/>`
+        : '';
 
-  for (const post of posts) {
-    const postUrl = `${cleanBaseUrl}${post.url}`;
-    const authorName = post.authors.map((a) => a.name).join(', ') || defaultAuthorName;
-    const authorEmail = post.authors[0]?.email || defaultAuthorEmail;
-    const authorLink = post.authors[0]?.url || defaultAuthorLink;
+      const htmlContent = imageUrl
+        ? `<img src="${escapeXml(imageUrl)}" alt="${escapeXml(post.title)}" style="max-width:100%;height:auto;border-radius:8px;margin-bottom:12px;" /><p>${escapeXml(description)}</p>`
+        : `<p>${escapeXml(description)}</p>`;
 
-    let imageUrl: string | undefined;
-    if (post.image) {
-      imageUrl = post.image.startsWith('http')
-        ? post.image
-        : `${cleanBaseUrl}${post.image.startsWith('/') ? '' : '/'}${post.image}`;
-    }
+      const categoriesXml = post.tags
+        .map((tag) => `      <category><![CDATA[${tag.name}]]></category>`)
+        .join('\n');
 
-    const mimeType = imageUrl ? getMimeType(imageUrl) : 'image/png';
-    const postCategories = post.tags.map((t) => ({ name: t.name }));
+      return `    <item>
+      <title><![CDATA[${post.title}]]></title>
+      <link>${postUrl}</link>
+      <guid isPermaLink="true">${postUrl}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description><![CDATA[${htmlContent}]]></description>
+      <content:encoded><![CDATA[${htmlContent}]]></content:encoded>
+      <dc:creator><![CDATA[${authorName}]]></dc:creator>
+${mediaContentTag ? mediaContentTag + '\n' : ''}${categoriesXml}
+    </item>`;
+    })
+    .join('\n');
 
-    // Extended tags for RSS readers
-    const extensions: { name: string; objects: Record<string, unknown> }[] = [
-      {
-        name: 'dc:creator',
-        objects: { _cdata: authorName },
-      },
-    ];
-
-    if (imageUrl) {
-      extensions.push({
-        name: 'media:content',
-        objects: {
-          _attributes: {
-            url: imageUrl,
-            medium: 'image',
-            type: mimeType,
-          },
-        },
-      });
-    }
-
-    // HTML content formatted with responsive cover image for RSS readers
-    const htmlContent = imageUrl
-      ? `<p><img src="${imageUrl}" alt="${post.title}" style="max-width:100%;height:auto;border-radius:8px;margin-bottom:12px;" /></p><p>${post.description ?? post.title}</p>`
-      : `<p>${post.description ?? post.title}</p>`;
-
-    feed.addItem({
-      title: post.title,
-      // Omit `id` so `feed` automatically generates `<guid isPermaLink="true">` matching `link`
-      link: postUrl,
-      description: post.description ?? '',
-      content: htmlContent,
-      date: post.date ?? new Date(),
-      image: imageUrl,
-      enclosure: imageUrl ? { url: imageUrl, type: mimeType } : undefined,
-      author: [
-        {
-          name: authorName,
-          email: authorEmail,
-          link: authorLink,
-        },
-      ],
-      category: postCategories,
-      extensions,
-    });
-  }
-
-  return feed;
+  return `<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>${escapeXml(appName)}</title>
+    <link>${channelLink}</link>
+    <description>Insights, engineering deep dives, and product news from the Relay team.</description>
+    <atom:link href="${feedLink}" rel="self" type="application/rss+xml"/>
+    <language>en</language>
+    <lastBuildDate>${buildDate}</lastBuildDate>
+    <image>
+      <url>${iconUrl}</url>
+      <title>${escapeXml(appName)}</title>
+      <link>${channelLink}</link>
+      <width>144</width>
+      <height>144</height>
+    </image>
+${itemsXml}
+  </channel>
+</rss>`;
 }
 
-export function getRSS(baseUrl?: string): string {
-  return buildFeed(baseUrl).rss2();
-}
+/**
+ * Standard Atom 1.0 Feed Generator
+ */
+export function getAtom(baseUrl = 'https://blogs.relaymail.online'): string {
+  const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+  const posts = getPosts(blogSource.getPages(), blogAuthors);
+  const latestPost = posts[0];
 
-export function getAtom(baseUrl?: string): string {
-  return buildFeed(baseUrl).atom1();
+  const updatedDate = (latestPost?.date ?? new Date()).toISOString();
+  const channelLink = `${cleanBaseUrl}/blog`;
+  const feedLink = `${cleanBaseUrl}/atom.xml`;
+  const iconUrl = `${cleanBaseUrl}/favicon.png`;
+
+  const entriesXml = posts
+    .map((post) => {
+      const postUrl = `${cleanBaseUrl}${post.url}`;
+      const published = (post.date ?? new Date()).toISOString();
+      const authorName = post.authors.map((a) => a.name).join(', ') || 'RelayHQ';
+      const description = post.description ?? post.title;
+
+      let imageUrl: string | undefined;
+      if (post.image) {
+        imageUrl = post.image.startsWith('http')
+          ? post.image
+          : `${cleanBaseUrl}${post.image.startsWith('/') ? '' : '/'}${post.image}`;
+      }
+
+      const mediaContent = imageUrl
+        ? `<media:content url="${escapeXml(imageUrl)}" medium="image"/>
+      <media:thumbnail url="${escapeXml(imageUrl)}"/>`
+        : '';
+
+      const htmlContent = imageUrl
+        ? `<p><img src="${escapeXml(imageUrl)}" alt="${escapeXml(post.title)}" style="max-width:100%;height:auto;border-radius:8px;margin-bottom:12px;" /></p><p>${escapeXml(description)}</p>`
+        : `<p>${escapeXml(description)}</p>`;
+
+      const categoriesXml = post.tags
+        .map((tag) => `      <category term="${escapeXml(tag.name)}"/>`)
+        .join('\n');
+
+      return `  <entry>
+    <title>${escapeXml(post.title)}</title>
+    <link href="${postUrl}"/>
+    <id>${postUrl}</id>
+    <published>${published}</published>
+    <updated>${published}</updated>
+    <summary type="text">${escapeXml(description)}</summary>
+    <content type="html"><![CDATA[${htmlContent}]]></content>
+    <author>
+      <name>${escapeXml(authorName)}</name>
+      <email>sohamglxi@gmail.com</email>
+      <uri>${channelLink}</uri>
+    </author>
+${mediaContent ? '    ' + mediaContent + '\n' : ''}${categoriesXml}
+  </entry>`;
+    })
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+  <title>${escapeXml(appName)}</title>
+  <link href="${channelLink}"/>
+  <link href="${feedLink}" rel="self"/>
+  <updated>${updatedDate}</updated>
+  <id>${channelLink}</id>
+  <icon>${iconUrl}</icon>
+  <logo>${iconUrl}</logo>
+  <subtitle>Insights, engineering deep dives, and product news from the Relay team.</subtitle>
+${entriesXml}
+</feed>`;
 }

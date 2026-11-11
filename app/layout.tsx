@@ -23,6 +23,27 @@ export const metadata: Metadata = {
     shortcut: '/favicon.png',
     apple: '/favicon.png',
   },
+  openGraph: {
+    title: 'Relay Blog',
+    description: 'The official blog of Relay — insights, engineering deep dives, and product news.',
+    url: 'https://blogs.relaymail.online/blog',
+    siteName: 'Relay Blog',
+    type: 'website',
+    images: [
+      {
+        url: 'https://blogs.relaymail.online/blog/rethinkgmail.png',
+        width: 1448,
+        height: 1086,
+        alt: 'Relay Blog',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Relay Blog',
+    description: 'The official blog of Relay — insights, engineering deep dives, and product news.',
+    images: ['https://blogs.relaymail.online/blog/rethinkgmail.png'],
+  },
   alternates: {
     types: {
       'application/rss+xml': [

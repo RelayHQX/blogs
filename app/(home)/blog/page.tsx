@@ -13,6 +13,27 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Blog',
   description: 'Insights, engineering stories, and product announcements from the Relay team.',
+  openGraph: {
+    title: 'Relay Blog',
+    description: 'Insights, engineering stories, and product announcements from the Relay team.',
+    url: 'https://blogs.relaymail.online/blog',
+    siteName: 'Relay Blog',
+    type: 'website',
+    images: [
+      {
+        url: 'https://blogs.relaymail.online/blog/rethinkgmail.png',
+        width: 1448,
+        height: 1086,
+        alt: 'Relay Blog',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Relay Blog',
+    description: 'Insights, engineering stories, and product announcements from the Relay team.',
+    images: ['https://blogs.relaymail.online/blog/rethinkgmail.png'],
+  },
 };
 
 export default function BlogIndexPage() {
