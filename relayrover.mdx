@@ -1,0 +1,302 @@
+---
+
+title: "Meet Rover: Making Email Understand What Matters"
+description: "Email contains more than messages. It contains orders, payments, appointments, verification codes, and important information. Meet Rover, the intelligence engine we're building to help Relay understand it all."
+date: "2026-11-12"
+tags: [Product, Engineering, Rover, Email, Philosophy]
+authors: [relay]
+readingTime: "7 min read"
+image: "/blog/rover.png"
+
+Email has become an essential part of our everyday lives. We receive work messages, shopping updates, payment confirmations, meeting invitations, verification codes, and countless other notifications through it.
+
+Email services like Gmail have made it easier to manage these messages. We can search, organize, label, archive, and filter thousands of emails.
+
+But there is still something missing.
+
+Your email application can show you a message. But can it understand what that message actually means?
+
+When a delivery confirmation arrives, you don't really want to read an entire email just to find out when your package will arrive. When a payment receipt arrives, you don't want to search through paragraphs to find the amount. And when a verification code arrives, you don't want to open an entire conversation just to copy six digits.
+
+The information is already there. It is simply buried inside messages.
+
+We believe email should work harder to bring that information to you.
+
+That is why we are building Rover.
+
+«"Email shouldn't just deliver information. It should help you understand it."»
+
+---
+
+The Problem With How We Handle Email
+
+Think about how many different things arrive in your inbox every day.
+
+A message from your bank, a delivery update from a shopping website, an invitation from a colleague, and a verification code from an application.
+
+They are all emails, but they don't all serve the same purpose.
+
+Traditional email organization mainly focuses on deciding where a message belongs. Primary, Promotions, Social, Updates, and other categories help keep things organized.
+
+These are useful features. But organizing messages is only part of the problem.
+
+Consider a simple example:
+
+You receive an email saying:
+
+«Your order #402918 has been shipped. Expected delivery: November 14. Your tracking ID is XYZ123456.»
+
+You open it, read through the message, find the tracking number, remember the delivery date, and close it.
+
+Now imagine receiving three more updates about the same order.
+
+You have four emails, but what you really care about is one thing: Where is my package?
+
+The same problem happens with payments, appointments, reservations, and verification codes.
+
+- <Mail className="size-4.5 inline text-blue-500 mr-2" /> Messages contain information: Important details are hidden inside long emails.
+- <Search className="size-4.5 inline text-purple-500 mr-2" /> **Finding information takes effort:** You often have to open and search through messages.
+- <Layers className="size-4.5 inline text-emerald-500 mr-2" /> Related emails stay separate: Multiple updates about the same thing appear as individual messages.
+- <Clock className="size-4.5 inline text-amber-500 mr-2" /> Small tasks consume time: Finding one date, amount, or code can take longer than it should.
+
+We don't think people should have to do all this work themselves.
+
+---
+
+Introducing Rover
+
+Rover is the intelligent email-processing engine behind Relay Mail.
+
+Its job is simple: understand what an email contains, find the information that matters, and help Relay decide how to present it.
+
+Instead of treating every email as just another block of text, Rover looks for the useful details inside it.
+
+It can identify things like:
+
+- <KeyRound className="size-4.5 inline text-emerald-500 mr-2" /> Verification codes: OTPs, security codes, and verification links.
+- <Package className="size-4.5 inline text-blue-500 mr-2" /> Orders and deliveries: Order numbers, tracking details, and expected delivery dates.
+- <Wallet className="size-4.5 inline text-purple-500 mr-2" /> Payments and receipts: Transaction amounts, payment confirmations, invoices, and refunds.
+- <Plane className="size-4.5 inline text-sky-500 mr-2" /> Travel information: Flight details, booking references, and hotel reservations.
+- <CalendarDays className="size-4.5 inline text-amber-500 mr-2" /> Events and appointments: Meeting invitations, schedules, and important deadlines.
+- <Users className="size-4.5 inline text-pink-500 mr-2" /> People and organizations: Contact details, names, and sender information.
+- <FileText className="size-4.5 inline text-neutral-500 mr-2" /> Documents: Invoices, attachments, and document references.
+
+The goal isn't to make email more complicated with artificial intelligence features.
+
+It is to remove the unnecessary work between receiving information and understanding it.
+
+---
+
+Two Parts, One Purpose
+
+Rover is built around two main components: the Extractor and the Filter.
+
+They have different responsibilities, but they work together.
+
+The Extractor: Finding What Matters
+
+<ScanSearch className="size-5 inline text-emerald-500 mr-2" /> The Extractor looks inside an email and finds useful information.
+
+Imagine receiving a delivery notification.
+
+Instead of leaving everything buried in the original message, Rover can identify the important details:
+
+The original email:
+
+«Your order #402918 has been shipped. Expected delivery: November 14. Track your package using tracking ID XYZ123456.»
+
+What Rover understands:
+
+Information| Extracted detail
+Type| Delivery
+Order number| #402918
+Tracking ID| XYZ123456
+Expected delivery| November 14
+Merchant| Amazon
+
+Relay can then use this information to show a cleaner delivery summary.
+
+The same approach applies to payment confirmations, verification codes, travel bookings, and other types of email.
+
+You don't need to read everything to find the one thing you need.
+
+The Filter: Knowing Where Things Belong
+
+<Filter className="size-5 inline text-blue-500 mr-2" /> Finding information is only half the job.
+
+Rover also needs to understand what kind of message it is and how it should be organized.
+
+The Filter uses information from the Extractor, along with the sender and other message details, to make better decisions.
+
+For example:
+
+Category| What belongs there
+Primary| Personal and important conversations
+Social| Social network notifications
+Promotions| Offers and marketing messages
+Updates| Receipts, shipping, and service notifications
+Forums| Mailing lists and group discussions
+Spam| Unwanted or suspicious messages
+
+But we want to go beyond these familiar categories.
+
+Rover can also recognize specific purposes:
+
+- <KeyRound className="size-4 inline text-emerald-500 mr-2" /> Authentication: Verification codes and login links.
+- <Truck className="size-4 inline text-blue-500 mr-2" /> Deliveries: Orders and package updates.
+- <Receipt className="size-4 inline text-purple-500 mr-2" /> Transactions: Payments, invoices, and refunds.
+- <CalendarClock className="size-4 inline text-amber-500 mr-2" /> Upcoming: Meetings, events, and deadlines.
+
+This means an email can belong to a familiar inbox category while also being recognized for its actual purpose.
+
+Organization should help you find information, not force you to understand a complicated folder system.
+
+---
+
+How Rover Works
+
+We don't want Rover to depend on expensive AI services or require every email to be sent to an external service for analysis.
+
+Our approach is to build a lightweight processing engine that can understand common email patterns directly on your device.
+
+Here is how the process works:
+
+<Mail className="size-5 inline text-blue-500 mr-2" /> Receive the email
+
+Relay receives the original message through your connected email account.
+
+<FileText className="size-5 inline text-purple-500 mr-2" /> Read its contents
+
+Rover prepares the message by understanding its structure, removing unnecessary formatting, and making its content easier to process.
+
+<ScanSearch className="size-5 inline text-emerald-500 mr-2" /> Find useful details
+
+It looks for recognizable information such as verification codes, order numbers, dates, amounts, and tracking references.
+
+<Brain className="size-5 inline text-amber-500 mr-2" /> Understand the message
+
+Rover combines the sender, subject, message content, and extracted details to determine what the email is about.
+
+<Filter className="size-5 inline text-indigo-500 mr-2" /> Organize it
+
+The Filter applies categories, user preferences, and rules to decide how the message should be organized.
+
+<Sparkles className="size-5 inline text-emerald-500 mr-2" /> Present what matters
+
+Relay uses the results to create clearer message views, useful summaries, and relevant information cards.
+
+The entire process is designed to happen without making the user do the work manually.
+
+---
+
+Not Every Email Needs Artificial Intelligence
+
+There is a common assumption that making software intelligent means sending everything to a large AI model.
+
+We don't believe that is always necessary.
+
+Many things inside emails follow recognizable patterns.
+
+A verification code is usually a short sequence of numbers. An invoice contains recognizable amounts and references. A delivery notification often includes an order number and a tracking ID.
+
+These details can be found using carefully designed rules and pattern recognition.
+
+That is the direction we are taking with Rover.
+
+- <Code className="size-4.5 inline text-blue-500 mr-2" /> Pattern recognition: Find codes, dates, amounts, and reference numbers.
+- <Globe className="size-4.5 inline text-purple-500 mr-2" /> Sender awareness: Recognize known senders and organizations.
+- <SlidersHorizontal className="size-4.5 inline text-emerald-500 mr-2" /> Smart rules: Combine different signals instead of relying on a single keyword.
+- <ShieldCheck className="size-4.5 inline text-teal-500 mr-2" /> Confidence checks: Avoid presenting uncertain information as fact.
+
+For example, simply seeing the word "payment" shouldn't automatically turn an email into a receipt. Rover should also look at who sent it, what the message says, and whether it contains actual transaction details.
+
+We want useful results, not unnecessary guesses.
+
+Our initial direction is to keep this processing local to the device wherever possible, reducing unnecessary external dependencies and keeping the system lightweight.
+
+---
+
+Beyond Individual Emails: Rover Intelligence
+
+This is where things become more interesting.
+
+Today, most email applications treat each message as a separate item, even when several messages are related to the same real-world activity.
+
+But people don't think in individual emails.
+
+They think about their orders, payments, meetings, reservations, and conversations.
+
+We want Relay to move closer to that way of thinking.
+
+Imagine ordering something online.
+
+You receive:
+
+- An order confirmation.
+- A payment confirmation.
+- A shipping notification.
+- A delivery update.
+
+Instead of making you search through four separate messages, Rover can recognize that they are connected.
+
+Relay could bring those details together into one delivery timeline.
+
+The same idea can work for other information:
+
+- <Package className="size-4.5 inline text-blue-500 mr-2" /> One delivery timeline: Follow an order from confirmation to arrival.
+- <Wallet className="size-4.5 inline text-emerald-500 mr-2" /> One transaction record: Find payment confirmations and related receipts together.
+- <CalendarDays className="size-4.5 inline text-purple-500 mr-2" /> One upcoming schedule: See important meetings and appointments.
+- <Plane className="size-4.5 inline text-sky-500 mr-2" /> One travel record: Keep booking confirmations and travel updates connected.
+
+We call this direction the Rover Intelligence Index.
+
+It is about connecting information that belongs together, rather than simply collecting more messages.
+
+---
+
+What This Means for Relay Mail
+
+Rover isn't supposed to become another complicated feature that users have to learn.
+
+Most of its work should happen quietly in the background.
+
+You shouldn't need to open a special Rover screen to find your verification code or understand a delivery update.
+
+You should simply experience a better email application.
+
+Imagine opening Relay and finding:
+
+- Your important conversations without unnecessary clutter.
+- Verification codes that are easy to access.
+- Delivery information that doesn't require searching through messages.
+- Payment details that are easier to find.
+- Important upcoming events that don't get lost in your inbox.
+
+These are the kinds of improvements we want Rover to make possible.
+
+The technology should remain behind the experience.
+
+---
+
+Our Vision
+
+Email is already full of useful information. We don't need another complicated system that asks people to organize everything themselves.
+
+We need software that does more of the work.
+
+Rover is our attempt to make that happen.
+
+We are not trying to replace email or change how the world sends messages. Email is an open communication system, and Relay is built to work with it.
+
+We want to rethink what happens after a message arrives.
+
+- <Sparkles className="size-4.5 inline text-amber-500 mr-2" /> To replace manual searching with useful information.
+- <Sparkles className="size-4.5 inline text-amber-500 mr-2" /> To replace disconnected messages with connected context.
+- <Sparkles className="size-4.5 inline text-amber-500 mr-2" /> To replace rigid organization with more meaningful understanding.
+- <Sparkles className="size-4.5 inline text-amber-500 mr-2" /> To make email feel less like managing a collection of messages and more like getting things done.
+
+Gmail gives Relay the emails. Rover helps Relay understand them.
+
+And that is only the beginning.
+
+Welcome to a smarter way to experience email.
