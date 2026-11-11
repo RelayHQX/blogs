@@ -141,7 +141,7 @@ A normal email application displays the entire message.
 Rover's Extractor would look for the useful details and produce a structured result.
 
 Example extraction result:
-
+```json
 {
   "type": "delivery",
   "entities": {
@@ -151,7 +151,7 @@ Example extraction result:
     "merchant": "Amazon"
   }
 }
-
+```
 This is what makes extraction useful.
 
 Instead of keeping everything as plain text, Rover turns the information into something Relay can understand and work with.
@@ -211,13 +211,13 @@ Documents| Important files and attachments
 An email can have a general category and a specific purpose at the same time.
 
 For example:
-
+```json
 {
   "category": "updates",
   "purpose": "delivery",
   "priority": "normal"
 }
-
+```
 This gives Relay more information than a simple folder or label.
 
 Priority and custom rules
@@ -237,7 +237,7 @@ Rover can use different signals to help determine priority:
 Users should also be able to create their own rules.
 
 For example:
-
+```
 IF sender is from my workplace
 AND email contains a meeting invitation
 
@@ -245,7 +245,7 @@ THEN:
   category = Primary
   purpose = Upcoming
   priority = Important
-
+```
 This is an example of the kind of flexible organization we want Rover to support.
 
 The objective is not to hide emails automatically or make decisions users cannot control. It is to make organization more useful and predictable.
@@ -367,7 +367,7 @@ Rover should do better.
 It should combine multiple signals before deciding what an email represents.
 
 For example:
-
+```json
 {
   "type": "delivery",
   "confidence": 0.96,
@@ -376,7 +376,7 @@ For example:
     "tracking_id": "XYZ123456"
   }
 }
-
+```
 The confidence value is an illustrative example, not a measured Rover benchmark.
 
 When information is uncertain, Relay should avoid presenting it as confirmed fact.
