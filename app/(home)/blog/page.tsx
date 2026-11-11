@@ -4,10 +4,8 @@ import {
   BlogCards,
   BlogTagFilter,
   BlogEmpty,
-  BlogBackLink,
-  BlogTitle,
-  BlogDescription,
 } from '@/components/blog';
+import { RelayLogo } from '@/components/ui/relay-logo';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -42,32 +40,21 @@ export default function BlogIndexPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1200px] pb-8">
-      {/* Blog Hero Section */}
-      <div className="mb-10 flex flex-col gap-3 border-b border-neutral-200/80 dark:border-neutral-800/80 pb-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800/80 px-3 py-1 text-xs font-semibold tracking-wide text-neutral-600 dark:text-neutral-300 uppercase">
-              Relay Dispatch
-            </span>
-            <BlogTitle className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight">
-              Blog & Insights
-            </BlogTitle>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <BlogBackLink href="/blog/tags" icon="tags">
-              All Tags
-            </BlogBackLink>
-            <BlogBackLink href="/rss.xml" icon="rss">
-              RSS Feed
-            </BlogBackLink>
-          </div>
+      {/* Blog Hero Section matching X blog style */}
+      <div className="mb-10 flex flex-col gap-4 border-b border-neutral-100 dark:border-neutral-900 pb-8">
+        <div>
+          <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-bold tracking-tight text-neutral-950 dark:text-white leading-[1.12]">
+            Stories worth your time
+          </h1>
+          <p className="mt-2.5 flex items-center gap-2 text-base sm:text-lg text-neutral-500 dark:text-neutral-400 font-normal">
+            <span>picks from the</span>
+            <RelayLogo className="size-4.5 sm:size-5 text-neutral-800 dark:text-neutral-200" />
+            <span>team</span>
+          </p>
         </div>
-        <BlogDescription className="max-w-2xl text-neutral-600 dark:text-neutral-400">
-          Thoughts, technical deep dives, and announcements from the team building the real-time communications infrastructure of the future.
-        </BlogDescription>
 
         {/* Quick Tag Filter Pills */}
-        <BlogTagFilter tags={tags} max={6} />
+        <BlogTagFilter tags={tags} max={8} />
       </div>
 
       {/* Post Grid */}

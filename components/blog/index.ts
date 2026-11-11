@@ -6,3 +6,4 @@ export * from './nav';
 export * from './body';
 export * from './page';
 export * from './panel';
+export * from './right-panel';
