@@ -36,7 +36,16 @@ import {
   Smartphone,
   Server,
   Info,
-  Brain
+  Brain,
+  Users,
+  ScanSearch,
+  Filter,
+  Truck,
+  Receipt,
+  CalendarClock,
+  Code,
+  Globe,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 const ALERT_MAP: Record<string, { type: CalloutType; title: string }> = {
@@ -158,7 +167,16 @@ const icons = {
   Smartphone,
   Server,
   Info,
-  Brain
+  Brain,
+  Users,
+  ScanSearch,
+  Filter,
+  Truck,
+  Receipt,
+  CalendarClock,
+  Code,
+  Globe,
+  SlidersHorizontal,
 };
 
 export function getMDXComponents(components?: MDXComponents) {
