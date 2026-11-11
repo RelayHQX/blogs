@@ -15,18 +15,20 @@ export const metadata: Metadata = {
     default: 'Relay Blog',
   },
   description: 'The official blog of Relay — insights, engineering deep dives, and product news.',
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
   alternates: {
     types: {
       'application/rss+xml': [
         {
-          title: 'Relay Blog RSS Feed',
+          title: 'Relay Blog',
           url: '/rss.xml',
-        },
-      ],
-      'application/atom+xml': [
-        {
-          title: 'Relay Blog Atom Feed',
-          url: '/atom.xml',
         },
       ],
     },

@@ -176,20 +176,9 @@ Then in any post, just set `authors: [elena]` in the frontmatter.
 
 ## 🎛️ How to Adjust Header and Title Text Sizes
 
-All text sizes use standard Tailwind CSS classes and can be customized quickly:
+All text sizes use standard Tailwind CSS classes and can be customized either globally or per-page:
 
-### 1. Post Title (Single Post Page)
-File: [`app/(home)/blog/[...slug]/page.tsx`](file:///home/spidey/Projects/relay-blog/app/(home)/blog/[...slug]/page.tsx)
-Locate line 34:
-```tsx
-<h1 className="mt-6 text-2xl sm:text-3xl lg:text-[34px] font-normal sm:font-medium tracking-tight text-neutral-900 dark:text-neutral-100 leading-[1.25]">
-  {page.data.title}
-</h1>
-```
-- For **smaller text**: change to `text-xl sm:text-2xl lg:text-3xl font-medium`
-- For **larger text**: change to `text-3xl sm:text-4xl lg:text-5xl font-bold`
-
-### 2. Reusable Component Default Size
+### 1. Global Default Blog Post Title
 File: [`components/blog/header.tsx`](file:///home/spidey/Projects/relay-blog/components/blog/header.tsx)
 Locate `BlogTitle`:
 ```tsx
@@ -197,19 +186,30 @@ export function BlogTitle(props: ComponentProps<'h1'>) {
   return (
     <h1
       {...props}
-      className={cn('text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl text-fd-foreground', props.className)}
+      className={cn(
+        'mt-6 text-2xl sm:text-3xl lg:text-[34px] font-normal sm:font-medium tracking-tight text-neutral-900 dark:text-neutral-100 leading-[1.25]',
+        props.className,
+      )}
     />
   );
 }
 ```
+- For **smaller title**: change to `text-xl sm:text-2xl lg:text-[28px]`
+- For **larger title**: change to `text-3xl sm:text-4xl lg:text-5xl font-bold`
 
-### 3. Blog Index Headline ("The Blog")
-File: [`app/(home)/blog/page.tsx`](file:///home/spidey/Projects/relay-blog/app/(home)/blog/page.tsx)
-Locate line 19:
+### 2. Post Title on Single Post Page
+File: [`app/(home)/blog/[...slug]/page.tsx`](file:///home/spidey/Projects/relay-blog/app/(home)/blog/[...slug]/page.tsx)
 ```tsx
-<h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
-  The Blog
-</h1>
+<BlogTitle>{page.data.title}</BlogTitle>
+```
+You can pass custom classes anytime: `<BlogTitle className="text-xl sm:text-2xl">...`
+
+### 3. Blog Index Headline ("Blog & Insights")
+File: [`app/(home)/blog/page.tsx`](file:///home/spidey/Projects/relay-blog/app/(home)/blog/page.tsx)
+```tsx
+<BlogTitle className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight">
+  Blog & Insights
+</BlogTitle>
 ```
 
 ---

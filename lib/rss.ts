@@ -22,27 +22,60 @@ function getMimeType(url: string): string {
   }
 }
 
+export function getBaseUrl(req?: Request): string {
+  if (!req) return 'https://blogs.relaymail.online';
+
+  const host =
+    req.headers.get('x-forwarded-host') ||
+    req.headers.get('host') ||
+    'blogs.relaymail.online';
+
+  const proto =
+    req.headers.get('x-forwarded-proto') ||
+    (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https');
+
+  return `${proto}://${host}`;
+}
+
 export function buildFeed(baseUrl = 'https://blogs.relaymail.online') {
   // Ensure no trailing slash
   const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
 
+  // Dynamically load all published blog posts (auto-sorted newest first)
+  const posts = getPosts(blogSource.getPages(), blogAuthors);
+  const latestPost = posts[0];
+
+  // Dynamically resolve channel image from latest post or fallback to brand logo
+  let channelImage = `${cleanBaseUrl}/favicon.png`;
+  if (latestPost?.image) {
+    channelImage = latestPost.image.startsWith('http')
+      ? latestPost.image
+      : `${cleanBaseUrl}${latestPost.image.startsWith('/') ? '' : '/'}${latestPost.image}`;
+  }
+
+  // Dynamic feed author from the latest post or fallback to default
+  const defaultAuthorName = latestPost?.authors[0]?.name || 'RelayHQ';
+  const defaultAuthorEmail = latestPost?.authors[0]?.email || 'sohamglxi@gmail.com';
+  const defaultAuthorLink = latestPost?.authors[0]?.url || `${cleanBaseUrl}/blog`;
+
   const feed = new Feed({
     title: appName,
-    description: 'The official blog of Relay Mail — insights, engineering, product updates, and news.',
+    description: 'Insights, engineering deep dives, and product news from the Relay team.',
     id: `${cleanBaseUrl}/blog`,
     link: `${cleanBaseUrl}/blog`,
     language: 'en',
-    image: `${cleanBaseUrl}/blog/gradient_4096x2304.png`,
-    favicon: `${cleanBaseUrl}/favicon.ico`,
-    copyright: `All rights reserved ${new Date().getFullYear()}, RelayMailHQ`,
+    image: channelImage,
+    favicon: `${cleanBaseUrl}/favicon.png`,
+    copyright: `All rights reserved ${new Date().getFullYear()}, RelayHQ`,
+    updated: latestPost?.date ?? new Date(),
     feedLinks: {
       rss: `${cleanBaseUrl}/rss.xml`,
       atom: `${cleanBaseUrl}/atom.xml`,
     },
     author: {
-      name: 'RelayHQ',
-      email: 'contact@relaymail.online',
-      link: `${cleanBaseUrl}/blog`,
+      name: defaultAuthorName,
+      email: defaultAuthorEmail,
+      link: defaultAuthorLink,
     },
   });
 
@@ -54,13 +87,11 @@ export function buildFeed(baseUrl = 'https://blogs.relaymail.online') {
     },
   });
 
-  const posts = getPosts(blogSource.getPages(), blogAuthors);
-
   for (const post of posts) {
     const postUrl = `${cleanBaseUrl}${post.url}`;
-    const authorName = post.authors.map((a) => a.name).join(', ') || 'RelayHQ';
-    const authorEmail = post.authors[0]?.email || 'contact@relaymail.online';
-    const authorLink = post.authors[0]?.url || `${cleanBaseUrl}/blog`;
+    const authorName = post.authors.map((a) => a.name).join(', ') || defaultAuthorName;
+    const authorEmail = post.authors[0]?.email || defaultAuthorEmail;
+    const authorLink = post.authors[0]?.url || defaultAuthorLink;
 
     let imageUrl: string | undefined;
     if (post.image) {
@@ -72,6 +103,7 @@ export function buildFeed(baseUrl = 'https://blogs.relaymail.online') {
     const mimeType = imageUrl ? getMimeType(imageUrl) : 'image/png';
     const postCategories = post.tags.map((t) => ({ name: t.name }));
 
+    // Extended tags for RSS readers
     const extensions: { name: string; objects: Record<string, unknown> }[] = [
       {
         name: 'dc:creator',
@@ -92,14 +124,20 @@ export function buildFeed(baseUrl = 'https://blogs.relaymail.online') {
       });
     }
 
+    // HTML content formatted with responsive cover image for RSS readers
+    const htmlContent = imageUrl
+      ? `<p><img src="${imageUrl}" alt="${post.title}" style="max-width:100%;height:auto;border-radius:8px;margin-bottom:12px;" /></p><p>${post.description ?? post.title}</p>`
+      : `<p>${post.description ?? post.title}</p>`;
+
     feed.addItem({
       title: post.title,
       // Omit `id` so `feed` automatically generates `<guid isPermaLink="true">` matching `link`
       link: postUrl,
       description: post.description ?? '',
-      content: `<p>${post.description ?? post.title}</p>`,
+      content: htmlContent,
       date: post.date ?? new Date(),
       image: imageUrl,
+      enclosure: imageUrl ? { url: imageUrl, type: mimeType } : undefined,
       author: [
         {
           name: authorName,

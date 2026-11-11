@@ -18,7 +18,7 @@ export const blogAuthors: Record<string, BlogAuthor> = {
     title: 'Core Maintainers',
     url: 'https://github.com/RelayMailHQ',
     image: '/authors/relay-hq.png',
-    email: 'contact@relaymail.online',
+    email: 'sohamglxi@gmail.com',
   },
 };
 

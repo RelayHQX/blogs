@@ -1,3 +1,6 @@
+import Link from 'fumadocs-core/link';
+import Image from 'next/image';
+import { ArrowLeft, TagIcon, Rss } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { cn } from '../../lib/cn';
 
@@ -16,16 +19,51 @@ export function BlogHeader(props: ComponentProps<'div'>) {
   );
 }
 
+export interface BlogBackLinkProps extends ComponentProps<typeof Link> {
+  icon?: 'arrow' | 'tags' | 'rss' | 'none';
+}
+
+/** Sleek pill back/navigation link */
+export function BlogBackLink({
+  href = '/blog',
+  children = 'Go Back',
+  icon = 'arrow',
+  className,
+  ...props
+}: BlogBackLinkProps) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'inline-flex w-fit items-center gap-1.5 rounded-md border border-neutral-200/90 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/60 px-2.5 py-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors shadow-2xs',
+        className,
+      )}
+      {...props}
+    >
+      {icon === 'tags' ? (
+        <TagIcon className="size-3.5 text-neutral-500" />
+      ) : icon === 'rss' ? (
+        <Rss className="size-3.5 text-orange-500" />
+      ) : icon === 'none' ? null : (
+        <ArrowLeft className="size-3.5" />
+      )}
+      <span>{children}</span>
+    </Link>
+  );
+}
+
 /** 
  * Blog post title. 
- * Default font size is adjusted to be sleek and proportional (text-2xl sm:text-3xl lg:text-4xl).
- * Pass custom className to easily override (e.g. className="text-xl sm:text-2xl").
+ * Sleek, proportional typography matching modern editorial designs.
  */
 export function BlogTitle(props: ComponentProps<'h1'>) {
   return (
     <h1
       {...props}
-      className={cn('text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl text-fd-foreground', props.className)}
+      className={cn(
+        'mt-6 text-2xl sm:text-3xl lg:text-[34px] font-normal sm:font-medium tracking-tight text-neutral-900 dark:text-neutral-100 leading-[1.25]',
+        props.className,
+      )}
     />
   );
 }
@@ -35,7 +73,10 @@ export function BlogDescription(props: ComponentProps<'p'>) {
   return (
     <p
       {...props}
-      className={cn('text-base sm:text-lg text-fd-muted-foreground empty:hidden', props.className)}
+      className={cn(
+        'text-base sm:text-lg text-neutral-600 dark:text-neutral-400 empty:hidden leading-relaxed',
+        props.className,
+      )}
     />
   );
 }
@@ -51,5 +92,38 @@ export function BlogDate({
     <time dateTime={value.toISOString()} {...props}>
       {dateFormat.format(value)}
     </time>
+  );
+}
+
+/** Reusable cover image component with rounded borders and responsive sizing */
+export function BlogCoverImage({
+  src,
+  alt,
+  className,
+  priority = true,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  priority?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'relative mt-6 w-full overflow-hidden rounded-xl sm:rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800/50 shadow-xs',
+        className,
+      )}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        width={1448}
+        height={1086}
+        priority={priority}
+        unoptimized
+        className="w-full h-auto object-cover"
+        sizes="(max-width: 768px) 100vw, 760px"
+      />
+    </div>
   );
 }

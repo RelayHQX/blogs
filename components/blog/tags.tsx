@@ -62,3 +62,42 @@ export function BlogTagCards({
     </div>
   );
 }
+
+/** Horizontal quick filter pills for the blog index hero */
+export function BlogTagFilter({
+  tags,
+  max = 6,
+  className,
+}: {
+  tags: (BlogTag & { count: number })[];
+  max?: number;
+  className?: string;
+}) {
+  if (tags.length === 0) return null;
+
+  const displayTags = max ? tags.slice(0, max) : tags;
+  const remaining = max && tags.length > max ? tags.length - max : 0;
+
+  return (
+    <div className={cn('mt-2 flex flex-wrap items-center gap-2 pt-2', className)}>
+      <span className="text-xs font-medium text-neutral-400 dark:text-neutral-500">Topics:</span>
+      {displayTags.map((tag) => (
+        <Link
+          key={tag.slug}
+          href={tag.url}
+          className="rounded-full bg-neutral-100 dark:bg-neutral-800/80 px-3 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700"
+        >
+          #{tag.name} <span className="text-neutral-400 dark:text-neutral-500">({tag.count})</span>
+        </Link>
+      ))}
+      {remaining > 0 && (
+        <Link
+          href="/blog/tags"
+          className="text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:underline transition-colors"
+        >
+          + {remaining} more
+        </Link>
+      )}
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 import Link from 'fumadocs-core/link';
-import { Image } from 'fumadocs-core/framework';
+import Image from 'next/image';
 import type { ComponentProps } from 'react';
 import { cn } from '../../lib/cn';
 import type { BlogPost } from '../../lib/blog';
@@ -36,6 +36,7 @@ export function BlogCard({ post }: { post: BlogPost }) {
             alt={post.title}
             width={1200}
             height={630}
+            unoptimized
             sizes="(min-width: 1024px) 50vw, 100vw"
             className="size-full object-cover transition-transform duration-300 group-hover:scale-102"
           />
@@ -43,8 +44,11 @@ export function BlogCard({ post }: { post: BlogPost }) {
       )}
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-2 flex items-center justify-between text-xs text-neutral-400 dark:text-neutral-500">
-          {post.tags[0] && <span>#{post.tags[0].name}</span>}
-          
+          {post.readingTime ? (
+            <span>{post.readingTime}</span>
+          ) : (
+            post.tags[0] && <span>#{post.tags[0].name}</span>
+          )}
           {post.date && (
             <time dateTime={post.date.toISOString()}>
               {new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(post.date)}
@@ -67,9 +71,10 @@ export function BlogCard({ post }: { post: BlogPost }) {
             <Image
               src={primaryAuthor.image}
               alt={primaryAuthor.name}
-              width={32}
-              height={32}
-              className="size-7.5 sm:size-8 rounded-full border border-neutral-200/80 dark:border-neutral-700/80 object-cover shadow-2xs shrink-0"
+              width={38}
+              height={38}
+              unoptimized
+              className="size-8.5 sm:size-9 rounded-full border border-neutral-200/80 dark:border-neutral-700/80 object-cover shadow-2xs shrink-0"
             />
           )}
           <span className="text-xs sm:text-[13px] text-neutral-700 dark:text-neutral-300 font-medium">
@@ -78,5 +83,23 @@ export function BlogCard({ post }: { post: BlogPost }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+/** Empty state displayed when no posts match */
+export function BlogEmpty({
+  title = 'No posts published yet',
+  description = 'Check back soon for new updates!',
+  className,
+}: {
+  title?: string;
+  description?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn('rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-800 py-16 text-center', className)}>
+      <p className="text-base sm:text-lg font-medium text-neutral-800 dark:text-neutral-200">{title}</p>
+      <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">{description}</p>
+    </div>
   );
 }

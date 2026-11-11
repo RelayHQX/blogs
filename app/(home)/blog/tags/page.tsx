@@ -1,7 +1,6 @@
 import { blogAuthors, blogSource } from '@/lib/source';
 import { getPosts, getTags } from '@/lib/blog';
-import { BlogTagCards } from '@/components/blog';
-import Link from 'fumadocs-core/link';
+import { BlogBackLink, BlogTitle, BlogDescription, BlogTagCards, BlogEmpty } from '@/components/blog';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -16,21 +15,20 @@ export default function TagsPage() {
   return (
     <div className="mx-auto flex w-full max-w-[850px] flex-col gap-8">
       <div>
-        <Link
-          href="/blog"
-          className="inline-flex w-fit items-center gap-1 rounded-md border border-neutral-200/90 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/60 px-2 py-0.5 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors shadow-2xs"
-        >
-          &lt; Go Back
-        </Link>
-        <h1 className="mt-6 text-2xl sm:text-3xl font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
+        <BlogBackLink href="/blog">Go Back</BlogBackLink>
+        <BlogTitle className="mt-6 text-2xl sm:text-3xl font-medium tracking-tight">
           All Topics & Tags
-        </h1>
-        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+        </BlogTitle>
+        <BlogDescription className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
           Browse articles grouped by subject matter and categories.
-        </p>
+        </BlogDescription>
       </div>
 
-      <BlogTagCards tags={tags} />
+      {tags.length > 0 ? (
+        <BlogTagCards tags={tags} />
+      ) : (
+        <BlogEmpty title="No tags found" description="No tags or categories have been created yet." />
+      )}
     </div>
   );
 }
