@@ -35,6 +35,16 @@ export interface BlogTag {
   url: string;
 }
 
+export const DEFAULT_TAG_NAMES = ['Product', 'Philosophy', 'Email', 'Manifesto', 'Company'] as const;
+
+export const DEFAULT_TAGS: BlogTag[] = [
+  { name: 'Product', slug: 'product', url: '/blog/tags/product' },
+  { name: 'Philosophy', slug: 'philosophy', url: '/blog/tags/philosophy' },
+  { name: 'Email', slug: 'email', url: '/blog/tags/email' },
+  { name: 'Manifesto', slug: 'manifesto', url: '/blog/tags/manifesto' },
+  { name: 'Company', slug: 'company', url: '/blog/tags/company' },
+];
+
 export interface BlogPost {
   url: string;
   title: string;

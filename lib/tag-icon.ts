@@ -15,6 +15,8 @@ import {
   BoxesLinked,
   ShieldCheck,
   Calendars,
+  Gauge,
+  StepBack,
 } from 'lucide-react';
 
 export type TagIcon = LucideIcon | typeof RelayLogo | ComponentType<{ className?: string }>;
@@ -25,7 +27,6 @@ const TAG_ICON_ENTRIES: [string[], TagIcon][] = [
   [['philosophy'], GraphStar],
   [['email'], Mail],
   [['manifesto'], SquareAsterisk],
-  [['engineering'], Cpu],
   [['company', 'business'], RelayLogo],
   [['events'], Calendars],
   [['privacy', 'security'], ShieldCheck],
@@ -33,6 +34,9 @@ const TAG_ICON_ENTRIES: [string[], TagIcon][] = [
   [['all-tags', 'tags'], Tags],
   [['rss'], Rss],
   [['architecture'], BoxesLinked],
+  [['benchmarks', 'benchmark'], Gauge],
+  [['rover'], StepBack],
+  [['technology'], Cpu]
 ];
 
 const TAG_ICON_MAP = new Map<string, TagIcon>(

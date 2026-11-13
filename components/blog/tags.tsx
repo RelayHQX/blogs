@@ -2,6 +2,7 @@ import Link from 'fumadocs-core/link';
 import type { ComponentProps } from 'react';
 import { cn } from '../../lib/cn';
 import type { BlogTag } from '../../lib/blog';
+import { DEFAULT_TAGS } from '../../lib/blog';
 import { getTagIcon } from '@/lib/tag-icon';
 
 export function BlogTags({
@@ -67,6 +68,8 @@ export function BlogTagCards({
   );
 }
 
+const DEFAULT_SLUGS = new Set(['product', 'philosophy', 'email', 'manifesto', 'company']);
+
 export function BlogTagFilter({
   tags,
   max = 6,
@@ -76,10 +79,26 @@ export function BlogTagFilter({
   max?: number;
   className?: string;
 }) {
-  if (tags.length === 0) return null;
+  if (!tags || tags.length === 0) return null;
 
-  const displayTags = max ? tags.slice(0, max) : tags;
-  const remaining = max && tags.length > max ? tags.length - max : 0;
+  // Single-pass O(N) mapping for fast count lookups
+  const countMap = new Map<string, number>();
+  for (const t of tags) {
+    countMap.set(t.slug, t.count);
+  }
+
+  // 1. Default tags first (with actual counts)
+  const defaultItems = DEFAULT_TAGS.map((t) => ({
+    ...t,
+    count: countMap.get(t.slug) ?? 0,
+  }));
+
+  // 2. Other non-default tags next
+  const otherItems = tags.filter((t) => !DEFAULT_SLUGS.has(t.slug));
+
+  const allOrderedTags = [...defaultItems, ...otherItems];
+  const displayTags = max ? allOrderedTags.slice(0, max) : allOrderedTags;
+  const remaining = max && allOrderedTags.length > max ? allOrderedTags.length - max : 0;
 
   return (
     <div className={cn('mt-2 flex flex-wrap items-center gap-2 pt-2', className)}>
@@ -90,7 +109,7 @@ export function BlogTagFilter({
           <Link
             key={tag.slug}
             href={tag.url}
-            className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800/80 px-3 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700"
+            className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800/80 px-3 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700 shadow-2xs"
           >
             <Icon className="size-3 shrink-0" />
             <span>{tag.name}</span>
@@ -101,7 +120,7 @@ export function BlogTagFilter({
       {remaining > 0 && (
         <Link
           href="/blog/tags"
-          className="text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:underline transition-colors"
+          className="inline-flex items-center rounded-full bg-neutral-100/70 dark:bg-neutral-800/50 hover:bg-neutral-200/80 dark:hover:bg-neutral-700/80 px-2.5 py-1 text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
         >
           + {remaining} more
         </Link>

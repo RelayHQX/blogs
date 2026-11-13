@@ -68,7 +68,7 @@ export default function BlogIndexPage() {
           </h2>
           <p className="mt-3 flex items-center gap-2 text-sm sm:text-base text-neutral-500 dark:text-neutral-400 font-normal">
             <span>picks from the</span>
-            <RelayLogo text=" elayHQ" className="h-[18px] sm:h-[16px] w-auto text-neutral-900 dark:text-neutral-400" />
+            <RelayLogo text=" elayHQ" className="h-4.5 sm:h-4 w-auto text-neutral-900 dark:text-neutral-400" />
           </p>
         </div>
 

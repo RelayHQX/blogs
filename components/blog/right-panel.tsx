@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'fumadocs-core/link';
 import Image from 'next/image';
-import { ArrowUpRight, Check, ListFilter } from 'lucide-react';
+import { ArrowUpRight, Check, ListFilter, ChevronDown } from 'lucide-react';
 import type { BlogAuthor, BlogTag } from '@/lib/blog';
 import type { TOCItemType } from 'fumadocs-core/toc';
 import { useTOCItems, TOCScrollArea } from '@/components/toc';
@@ -33,6 +33,7 @@ export function BlogRightPanel({
   className,
 }: BlogRightPanelProps) {
   const [copied, setCopied] = useState(false);
+  const [tocOpen, setTocOpen] = useState(false);
   const items = useTOCItems();
   const dateObj = date ? new Date(date) : undefined;
 
@@ -123,20 +124,39 @@ export function BlogRightPanel({
         </div>
       )}
 
-      {/* Table of Contents with Fumadocs Rail Line Indicator */}
+      {/* Table of Contents with Fumadocs Rail Line Indicator (Collapsible on mobile) */}
       {items.length > 0 && (
-        <div className="flex flex-col gap-3 pt-4 border-t border-neutral-100 dark:border-neutral-900">
-          <span className="flex items-center gap-1.5 text-xs font-normal text-neutral-400 dark:text-neutral-500">
-            <ListFilter className="size-3.5" />
-            <span>On This Page</span>
-          </span>
-          <TOCScrollArea className="max-h-[50vh] overflow-y-auto pr-1">
-            <TOCItems thumbBox={true}>
-              {items.map((item) => (
-                <TOCItem key={item.url} item={item} />
-              ))}
-            </TOCItems>
-          </TOCScrollArea>
+        <div className="flex flex-col gap-2 pt-4 border-t border-neutral-100 dark:border-neutral-900">
+          <button
+            type="button"
+            onClick={() => setTocOpen((prev) => !prev)}
+            className="flex items-center justify-between text-xs font-normal text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors w-full cursor-pointer lg:cursor-default"
+          >
+            <span className="flex items-center gap-1.5">
+              <ListFilter className="size-3.5" />
+              <span>On This Page</span>
+            </span>
+            <ChevronDown
+              className={cn(
+                'size-3.5 transition-transform duration-200 lg:hidden text-neutral-400',
+                tocOpen && 'rotate-180',
+              )}
+            />
+          </button>
+
+          <div className={cn(tocOpen ? 'block' : 'hidden lg:block', 'pt-1')}>
+            <TOCScrollArea className="max-h-[50vh] overflow-y-auto pr-1">
+              <TOCItems thumbBox={true}>
+                {items.map((item) => (
+                  <TOCItem
+                    key={item.url}
+                    item={item}
+                    onClick={() => setTocOpen(false)}
+                  />
+                ))}
+              </TOCItems>
+            </TOCScrollArea>
+          </div>
         </div>
       )}
 

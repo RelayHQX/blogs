@@ -8,3 +8,4 @@ export * from './body';
 export * from './page';
 export * from './panel';
 export * from './right-panel';
+export * from '@/components/charts';

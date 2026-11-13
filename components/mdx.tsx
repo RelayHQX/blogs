@@ -1,6 +1,16 @@
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import { Callout, type CalloutType } from '@/components/ui/callout';
+import { Mermaid } from '@/components/ui/mermaid';
+import {
+  MetricCard,
+  MetricGrid,
+  SimpleLineChart,
+  SimpleBarChart,
+  DotMatrix,
+  IsometricArchitecture,
+  LayeredArchitecture,
+} from '@/components/charts';
 import React, { Children, isValidElement, cloneElement, type ReactNode, type ComponentProps } from 'react';
 import { cn } from '@/lib/cn';
 import {
@@ -183,11 +193,66 @@ const icons = {
   Wallet,
 };
 
+function extractText(node: ReactNode): string {
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (!node) return '';
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (isValidElement(node) && (node.props as { children?: ReactNode })?.children) {
+    return extractText((node.props as { children?: ReactNode }).children);
+  }
+  return '';
+}
+
+function PreWrapper(props: ComponentProps<'pre'> & { 'data-language'?: string }) {
+  const lang =
+    props['data-language'] ||
+    (typeof props.className === 'string' ? props.className.match(/language-(\w+)/)?.[1] : undefined);
+
+  let isMermaid = lang === 'mermaid';
+
+  Children.forEach(props.children, (child) => {
+    if (isValidElement(child)) {
+      const childProps = child.props as {
+        className?: string;
+        children?: ReactNode;
+        'data-language'?: string;
+      };
+      if (
+        childProps['data-language'] === 'mermaid' ||
+        childProps.className?.includes('language-mermaid')
+      ) {
+        isMermaid = true;
+      }
+    }
+  });
+
+  if (isMermaid || (typeof props.className === 'string' && props.className.includes('mermaid'))) {
+    const rawCode = extractText(props.children);
+    return <Mermaid chart={rawCode.trim()} />;
+  }
+
+  const DefaultPre = defaultMdxComponents.pre;
+  if (DefaultPre) {
+    return <DefaultPre {...props} />;
+  }
+  return <pre {...props} />;
+}
+
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
     blockquote: AlertBlockquote,
+    pre: PreWrapper,
     Callout,
+    Mermaid,
+    MetricCard,
+    MetricGrid,
+    SimpleLineChart,
+    SimpleBarChart,
+    DotMatrix,
+    IsometricArchitecture,
+    LayeredArchitecture,
     ...icons,
     ...components,
   } satisfies MDXComponents;

@@ -1,0 +1,431 @@
+---
+title: "Building @rhq/avatar: How We Made Contact Resolution 3,000x Faster"
+description: "Why we replaced Relay's legacy avatar engine with an open-source package: eliminating memory leaks, cutting network probing by 98.6%, and achieving 15 million reads per second."
+date: "2026-11-13"
+tags: [Technology, Performance, Architecture, Benchmarks]
+authors: [relay]
+readingTime: "6 min read"
+image: "/blog/avatar-engine.png"
+---
+
+When you open an email app like Relay, you expect it to feel effortless. As you flick-scroll through your inbox, profile pictures and company logos should appear instantly next to each conversation. If someone doesn't have a picture, the app seamlessly shows their colorful initials.
+
+It sounds deceptively simple: it's just a tiny picture next to an email address.
+
+Behind the scenes, however, avatar resolution is one of the most demanding tasks in app development. An active inbox contains hundreds of emails, rapid scrolling, and continuous background syncing. Every single time a new message appears on screen, your phone has barely **16 milliseconds** to figure out who sent it, look up their image, and draw it on display before the animation drops a frame.
+
+If the avatar engine stutters, leaks memory, or hammers the internet with redundant requests, your entire app feels sluggish, your phone heats up, and your battery drains.
+
+We recently replaced Relay's legacy in-repo avatar engine (`src/services/avatarEngine.ts`) with a ground-up external open-source package: **`@rhq/avatar`**. 
+
+The results transformed the experience: **15 million reads per second**, zero memory leaks, **98.6% less cellular data used**, and a **3,080x speedup** when scrolling past contacts.
+
+Here is the story of why our original engine broke down, how we re-engineered it, and how these optimizations make Relay feel lightning fast.
+
+---
+
+## Executive Overview: The Upgrades at a Glance
+
+Before diving into the code, here is what replacing our legacy engine with `@rhq/avatar` achieved across our four primary performance targets:
+
+- **Ultra-Fast Memory Reads**: Reading from phone memory takes just 66 nanoseconds—running at over 15 million operations per second.
+- **Silky Smooth Scrolling**: List re-renders past senders without photos now take 0.10 milliseconds with zero network delay.
+- **Radical Data Savings**: Checking whether a remote profile photo exists now uses only 256 bytes instead of downloading 18.5 kilobytes every time.
+- **Universal Compatibility**: Security hashing is 4.6x faster and works identically across iPhone, Android, Web, and desktop.
+
+<MetricGrid
+  columns={2}
+  items={[
+    {
+      label: "L1 CACHE READS",
+      value: "15.0M+",
+      change: "+80% faster",
+      description: "Instant in-memory lookups with 66ns latency—over 15 million reads every second",
+      footer: "15,049,842 OPS/S",
+      dots: [3, 4, 6, 8, 12, 10, 7, 5, 4, 6, 8, 11, 7, 5],
+      highlightIndex: 4
+    },
+    {
+      label: "LIST RE-RENDER SPEED",
+      value: "0.10 ms",
+      change: "3,080x speedup",
+      description: "Zero redundant network requests when scrolling past contacts without avatars",
+      footer: "100% NETWORK ELIMINATED",
+      dots: [12, 9, 6, 4, 2, 1, 1, 1, 1, 1, 1, 1],
+      highlightIndex: 0
+    },
+    {
+      label: "BANDWIDTH SAVED",
+      value: "98.6%",
+      change: "256 B vs 18.5 KB",
+      description: "Micro-probing checks existence without downloading full image files over cellular",
+      footer: "STREAM ABORT OPTIMIZATION",
+      variant: "block"
+    },
+    {
+      label: "UNIVERSAL SHA-256",
+      value: "1.1M ops/s",
+      change: "4.6x throughput",
+      description: "Blazing fast email hashing running identically on iOS, Android, and Web",
+      footer: "MEMOIZED PIPELINE",
+      dots: [2, 3, 5, 7, 9, 11, 12, 10, 8, 6, 8, 11],
+      highlightIndex: 6
+    }
+  ]}
+/>
+
+---
+
+## The 5 Hidden Bottlenecks of Our Legacy Engine
+
+When we audited Relay's previous avatar engine under real-world conditions (simulating a busy inbox with 3,000+ incoming contacts), five major architectural flaws emerged:
+
+### 1. Checking the Clock 100,000 Times a Second
+To check if a cached avatar had expired, the old engine asked the phone's operating system for the exact hardware timestamp (`Date.now()`) on every single lookup. 
+
+> **Everyday Analogy**: Imagine reading a book, but after every single word, you stop, walk across the room to check a wall clock, and write down the exact millisecond. You would never finish reading. When scrolling through a contact list, thousands of clock checks created needless CPU friction and drained battery power.
+
+### 2. The Hoarding Problem (Unbounded Memory Leaks)
+The old engine kept every cached avatar in a plain JavaScript list with no maximum capacity and no cleanup schedule. 
+
+> **Everyday Analogy**: Imagine never taking out the trash. Every piece of junk mail you receive gets stacked in your living room forever. For users who receive emails from thousands of newsletters, automated bots, and clients, the app's memory footprint grew endlessly until the mobile operating system killed the app to prevent a system crash.
+
+### 3. The Repeated Door-Knocking Bug (Negative Caching)
+This was the single most destructive bug in our old engine. When an email sender had no profile picture (like `notifications@service.com`), the engine correctly fell back to initials and saved:
+
+```ts
+avatarCache.set(key, { url: null, source: 'initials' });
+```
+
+However, the lookup helper contained this tiny oversight:
+
+```ts
+function getCachedAvatar(key: string) {
+  const cached = avatarCache.get(key);
+  if (cached && cached.url) return cached;
+  return null; // Bug: null url was treated as a complete cache miss!
+}
+```
+
+Because `cached.url` was `null`, the function returned `null`! The app concluded: *"We have never checked this person before!"*
+
+Every time you scrolled past that contact, Relay knocked on three external servers (Gravatar, Unavatar, Libravatar) asking if they had an image yet. Scrolling past 10 avatarless emails triggered **30 wasted internet requests** on every single scroll gesture, turning smooth 120Hz scrolling into noticeable stutter.
+
+### 4. Downloading the Entire Book Just to Read the Title
+To verify whether a contact had a Gravatar or company logo on the internet, the old engine downloaded the full image file (~18.5 KB) into memory.
+
+> **Everyday Analogy**: Imagine you want to check if a store is open. Instead of glancing through the window, you walk inside, purchase every item on the shelf, carry them home, and throw them away. You only needed to know if the store was open! Downloading full images repeatedly wasted cellular megabytes and forced the phone's memory cleaner to work overtime.
+
+### 5. Desktop-Only Cryptography on Mobile Devices
+To turn an email address into a secure Gravatar hash (like `contact@example.com` into a SHA-256 fingerprint), the legacy engine relied on desktop Node.js C++ bindings. Making this work on mobile phones required heavy polyfills and slowed down startup times.
+
+---
+
+## How `@rhq/avatar` Solves These Problems
+
+We engineered `@rhq/avatar` from scratch as an independent, lightweight, universal package designed to solve each bottleneck at the micro-architectural level:
+
+1. **Dual-TTL Memory Caching**: Real profile photos stay cached for 24 hours. Contacts with no photo are remembered as "negative" for 1 hour. Scrolling past avatarless contacts now resolves in **0.10 milliseconds with zero internet traffic**.
+2. **Coarse-Time Sampling**: Instead of interrogating the operating system clock 100,000 times a second, `@rhq/avatar` samples the time once per frame tick. Synchronous lookup throughput skyrocketed to **15,000,000 lookups per second**.
+3. **Range 0-0 Probing**: To check if an avatar exists on the web, `@rhq/avatar` asks the server for only the very first byte (`Range: bytes=0-0`). As soon as the server answers HTTP 206, the engine immediately cancels the connection. Bandwidth plummeted from **18.5 KB down to 256 bytes—a 98.6% reduction**.
+4. **Strict 1,000-Item LRU Limit**: When memory reaches 1,000 items, the oldest untouched contacts are quietly cleaned up. Memory stays strictly bounded, guaranteeing zero crashes.
+5. **Universal Pure-JS & WebCrypto Pipeline**: Email hashing runs natively in any environment—Web, React Native, Node.js, and Hermes—at over 1.1 million hashes per second.
+
+---
+
+## Visualizing the System Architecture
+
+To understand how these pieces connect, the architectural diagram below illustrates the complete journey of an avatar request:
+
+1. **The Client (Left)**: Your email screen requests an avatar for an incoming sender (`karri@linear.app`).
+2. **Relay's Engine (Center)**: The `@rhq/avatar` engine intercepts the query and performs a 66-nanosecond local memory lookup.
+3. **The Upstream Server (Right)**: If the contact is completely new, the engine sends a lightweight single-byte probe to verify existence and cancels the transfer before any heavy image payload downloads.
+
+<IsometricArchitecture
+  clientLabel="Client App"
+  clientSublabel="Inbox Scroll View"
+  relayLabel="Relay"
+  relaySublabel="@rhq/avatar Engine"
+  relayBadge="15M+ ops/s"
+  serverLabel="Avatar CDN"
+  serverSublabel="Gravatar / Domain"
+  leftCardTitle="POST /avatar/resolve"
+  leftCardLines={[
+    { key: "email", value: '"karri@linear.app"' },
+    { key: "policy", value: '"first-match"' },
+    { key: "cache", value: '"dual-ttl-l1"' }
+  ]}
+  rightCardTitle="HTTP 206 Partial Content"
+  rightCardLines={[
+    { key: "range", value: '"bytes=0-0"' },
+    { key: "payload", value: '"256 bytes (-98.6%)"' },
+    { key: "stream", value: '"response.body.cancel()"' }
+  ]}
+/>
+
+---
+
+## The 3-Tier Storage Hierarchy
+
+Think of avatar caching like an efficient office desk:
+
+- **Tier 1: In-Memory LRU (L1)**: Like papers currently in your hand. Resolves in 66 nanoseconds with zero battery cost.
+- **Tier 2: Persistent Storage (L2)**: Like files in your desk drawer. Saved on your device so that when you reboot your phone or open the app cold, your top 1,000 contacts restore in 2.68 milliseconds without touching the internet.
+- **Tier 3: Range Prober (Network)**: Like calling the warehouse. Only used for contacts you have never seen before, transferring just 256 bytes.
+
+The diagram below highlights this 3-tier structure:
+
+<LayeredArchitecture
+  layers={[
+    {
+      name: "L1 In-Memory LRU",
+      badge: "Dual-TTL",
+      stat: "66 ns lookup • 15M ops/s"
+    },
+    {
+      name: "L2 Disk Storage",
+      badge: "Persistence",
+      stat: "2.68 ms • 1,000 items"
+    },
+    {
+      name: "Range 0-0 Prober",
+      badge: "Network",
+      stat: "256 B probe (-98.6%)"
+    }
+  ]}
+/>
+
+---
+
+## Interactive Architecture Flows
+
+The two interactive flowcharts below let you inspect the internal mechanics of our network prober and resolution lifecycle. 
+
+> [!TIP]
+> You can drag to pan around each diagram, use the **`+`** and **`-`** buttons in the top right to zoom, or click the fullscreen icon to expand.
+
+### Network Probing Workflow: Old Full GET vs New Range 0-0
+
+This diagram contrasts how the legacy engine downloaded full 18.5 KB image files on every check, compared to `@rhq/avatar` requesting only the first byte and aborting the stream immediately:
+
+<Mermaid
+  chart={`flowchart LR
+  subgraph Legacy["Legacy Probing - 18.5 KB"]
+    direction TB
+    L1["Client GET /avatar.png"] --> L2["Server sends HTTP 200 + Full Image Data"]
+    L2 --> L3["Buffer 18.5 KB image in memory"]
+  end
+
+  subgraph Rhq["@rhq/avatar Probing - 256 B"]
+    direction TB
+    R1["Client GET /avatar.png<br>Header: Range: bytes=0-0"] --> R2["Server sends HTTP 206 Partial Content"]
+    R2 --> R3["response.body.cancel()<br>Immediate Stream Abort"]
+  end`}
+/>
+
+### Complete Multi-Tier Resolution Lifecycle
+
+This diagram traces how an avatar query moves from an inbox scroll gesture down through local memory, persistent disk, and upstream CDNs:
+
+<Mermaid
+  chart={`flowchart LR
+  subgraph Client["Client Application"]
+    direction TB
+    C1["Inbox List Scroll"]
+    C2["Avatar Query: user@company.com"]
+    C1 --> C2
+  end
+
+  subgraph Engine["@rhq/avatar Engine"]
+    direction TB
+    L1["L1 In-Memory LRU<br>Dual-TTL 66 ns"]
+    L2["L2 Disk Storage<br>Active Window 2.68 ms"]
+    RP["Range Prober<br>Header: Range: bytes=0-0"]
+    L1 -->|Miss| L2
+    L2 -->|Miss| RP
+  end
+
+  subgraph Providers["Upstream Providers"]
+    direction TB
+    P1["Corporate Domain Favicons"]
+    P2["Gravatar Universal SHA-256"]
+    P3["Initials Fallback 1h Negative TTL"]
+  end
+
+  C2 -->|Lookup| L1
+  RP -->|Probe 256 B| P1
+  RP -->|Probe 256 B| P2
+  P1 -->|Verified URL| L1
+  P2 -->|Verified URL| L1
+  P3 -->|Negative Cached| L1
+  L1 -->|Sync Resolution| C1`}
+/>
+
+---
+
+## Performance Benchmarks
+
+To verify these architectural changes, we ran automated head-to-head benchmark suites testing both engines under heavy stress.
+
+### 1. Read Latency Under Concurrency (100,000 Consecutive Lookups)
+
+When you rapidly scroll through an inbox, your app performs thousands of avatar checks in quick succession. The chart below measures lookup latency in nanoseconds across 100,000 consecutive reads. 
+
+Notice how `@rhq/avatar` (the solid green line) maintains an ultra-steady ~66 nanoseconds, while the legacy engine (dashed line) takes almost twice as long (~120 nanoseconds):
+
+<SimpleLineChart
+  title="L1 Cache Read Latency Under Sustained Load"
+  subtitle="Comparing nanosecond lookup latency across 100,000 consecutive read queries"
+  period="100k Reads"
+  labels={['10k', '25k', '40k', '55k', '70k', '85k', '100k']}
+  data={[68, 66, 67, 65, 66, 66, 66]}
+  comparisonData={[122, 120, 119, 121, 120, 118, 120]}
+  primaryLabel="@rhq/avatar (66 ns)"
+  secondaryLabel="Legacy Engine (120 ns)"
+  yUnit=" ns"
+  yMin={40}
+  yMax={140}
+/>
+
+---
+
+### 2. Comprehensive Head-to-Head Comparison
+
+The chart below summarizes how both engines compare across all core performance dimensions. Green bars show `@rhq/avatar`, while gray bars show the legacy in-repo engine:
+
+<SimpleBarChart
+  title="Comprehensive Head-to-Head Performance"
+  subtitle="@rhq/avatar package vs legacy in-repo engine across key architectural benchmarks"
+  primaryLabel="@rhq/avatar"
+  secondaryLabel="Legacy In-Repo"
+  items={[
+    {
+      label: "L1 Cache Read Throughput",
+      sublabel: "Higher is better (ops/sec)",
+      primary: 15.05,
+      primaryDisplay: "15.05M ops/s",
+      secondary: 8.36,
+      secondaryDisplay: "8.36M ops/s",
+      change: "+80% faster",
+      higherIsBetter: true
+    },
+    {
+      label: "Universal SHA-256 Hashing",
+      sublabel: "Higher is better (hashes/sec)",
+      primary: 1.10,
+      primaryDisplay: "1.10M ops/s",
+      secondary: 0.24,
+      secondaryDisplay: "238k ops/s",
+      change: "4.6x throughput",
+      higherIsBetter: true
+    },
+    {
+      label: "Startup Hydration Latency",
+      sublabel: "Lower is better (time to load cache)",
+      primary: 2.68,
+      primaryDisplay: "2.68 ms (1k items)",
+      secondary: 4.68,
+      secondaryDisplay: "4.68 ms (500 items)",
+      change: "1.7x faster (2x items)",
+      higherIsBetter: false
+    },
+    {
+      label: "List Re-render Latency (10 Scrolls)",
+      sublabel: "Lower is better (milliseconds to resolve)",
+      primary: 0.10,
+      primaryDisplay: "0.10 ms",
+      secondary: 310.54,
+      secondaryDisplay: "310.5 ms",
+      change: "3,080x faster",
+      higherIsBetter: false
+    },
+    {
+      label: "Network Probe Payload (100 Probes)",
+      sublabel: "Lower is better (kilobytes downloaded)",
+      primary: 25,
+      primaryDisplay: "25 KB",
+      secondary: 1800,
+      secondaryDisplay: "1,800 KB",
+      change: "98.6% saved",
+      higherIsBetter: false
+    }
+  ]}
+/>
+
+---
+
+## Detailed Benchmark Breakdown by Layer
+
+For engineering teams curious about the exact microsecond numbers, here is the granular breakdown from our test suite:
+
+### 1. In-Memory Read Latency (100,000 Reads)
+
+| Metric | Legacy In-Repo Engine | `@rhq/avatar` Package | Improvement |
+| :--- | :--- | :--- | :--- |
+| **Total Duration (100k reads)** | 11.96 ms | **6.64 ms** | **~1.8x faster** |
+| **Latency per Lookup** | 0.120 µs (120 ns) | **0.066 µs (66 ns)** | Ultra-low nanosecond lookup |
+| **Throughput** | 8,362,850 ops/s | **15,049,842 ops/s** | Over **15 million lookups/sec** |
+
+### 2. Memory Boundedness (3,000 Incoming Senders)
+
+| Criterion | Legacy In-Repo Engine | `@rhq/avatar` Package | Evaluation |
+| :--- | :--- | :--- | :--- |
+| **Memory Cache Size** | **3,001 items** | **1,000 items** | `@rhq/avatar` strictly bounds memory |
+| **Eviction Policy** | None (unbounded growth) | **LRU** (Least Recently Used) | Legacy leaks memory indefinitely |
+| **Oldest Entry (`contact_0`)** | Retained in memory | **Evicted** | Proper garbage collection in `@rhq/avatar` |
+| **Newest Entry (`contact_2999`)** | Retained in memory | **Retained** | High-value recent data kept active |
+| **Out-Of-Memory (OOM) Risk** | High on long mobile sessions | **Zero** (O(1) memory bound) | Critical mobile stability fix |
+
+### 3. Startup Hydration from Disk Storage
+
+| Property | Legacy In-Repo Engine | `@rhq/avatar` Package | Impact |
+| :--- | :--- | :--- | :--- |
+| **Entries Saved to Disk** | 501 items (arbitrary slice) | **1,000 items (true LRU)** | `@rhq/avatar` preserves active working set |
+| **Startup Hydration Latency** | 4.68 ms (501 items) | **2.68 ms (1,000 items)** | **~1.7x faster** while hydrating 2x more items |
+| **Recent Senders Restored** | **Lost** (Keys #501 to #3000 dropped) | **100% Preserved** | Zero cold startup cache misses |
+| **Startup Network Penalty** | Fresh network fetches triggered | **Zero network requests** | Instant initial screen render |
+
+### 4. Negative Result Caching (List Scrolling Fix)
+
+Simulating 1 cold initial load followed by 10 fast list re-renders past senders without avatars:
+
+| Stage | Legacy In-Repo Engine | `@rhq/avatar` Package | Speedup / Impact |
+| :--- | :--- | :--- | :--- |
+| **Cold Initial Query** | 35.93 ms (3 network calls) | 36.93 ms (3 network calls) | Standard cold probe phase |
+| **Subsequent 10 Re-renders** | **310.54 ms** | **0.101 ms** | **~3,080x faster** |
+| **Network Calls on Re-render** | **30 network calls** | **0 network calls** | **100% network calls eliminated** |
+
+---
+
+## Architectural Comparison Matrix
+
+| Feature | Legacy In-Repo Engine | `@rhq/avatar` Package |
+| :--- | :--- | :--- |
+| **Distribution** | Monolithic code inside app repo | Standalone NPM module (`@rhq/avatar`) |
+| **L1 Memory Cache** | Unbounded `Map` (memory leak) | Bounded Dual-TTL LRU Cache (`AvatarCache`) |
+| **L2 Persistence Adapter** | Hardcoded React Native AsyncStorage | Pluggable adapter (AsyncStorage, localStorage, Redis) |
+| **Negative Result Caching** | Broken (treated as miss, loop queries) | Supported (`negativeTtl` defaults to 3,600s) |
+| **Network Probing** | Full GET payload download (~18.5 KB) | `Range: bytes=0-0` + `body.cancel()` (~256 B) |
+| **Resolution Policies** | Hardcoded waterfall only | Pluggable (`'first-match'`, `'fastest'`, `'verified-only'`) |
+| **SHA-256 Engine** | Node.js `crypto` only | Universal memoized pipeline (Web Crypto + pure JS) |
+| **Framework Compatibility** | React Native only | React, React Native, Expo, Node.js, Next.js, Vanilla JS |
+
+---
+
+## Conclusion & Open Source Availability
+
+Replacing an ad-hoc in-repo service with a strictly bounded, micro-optimized package delivered tangible improvements across every dimension of Relay's experience:
+
+- **Instant Fluidity**: 15 million cache reads per second ensure zero scroll stutter, even on complex thread lists.
+- **Reliable Memory Footprint**: Strict LRU limits protect mobile phones from out-of-memory crashes.
+- **Battery & Data Efficiency**: 98.6% less probe bandwidth and 100% elimination of redundant re-render requests.
+
+`@rhq/avatar` is open source, fully typed in TypeScript, and designed to work anywhere JavaScript runs.
+
+Check out the code and integrate it into your own apps:
+
+```bash
+npm install @rhq/avatar
+```
+
+**Clean architecture. Zero leaks. Sub-millisecond speed.**

@@ -8,9 +8,10 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { SearchButton } from '@/components/search-button';
 import { cn } from '@/lib/cn';
 import type { BlogTag } from '@/lib/blog';
+import { DEFAULT_TAG_NAMES } from '@/lib/blog';
 import { getTagIcon } from '@/lib/tag-icon';
 
-export { getTagIcon };
+export { getTagIcon, DEFAULT_TAG_NAMES };
 
 interface LeftSidebarProps {
   tags?: BlogTag[];
@@ -18,8 +19,6 @@ interface LeftSidebarProps {
   className?: string;
   compact?: boolean;
 }
-
-const DEFAULT_TAG_NAMES = ['Product', 'Philosophy', 'Email', 'Manifesto'];
 
 export function LeftSidebar({
   tags = [],
